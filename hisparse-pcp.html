@@ -1,0 +1,404 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="HiSparse + PCP 组合设计：依据固定版本源码的中文设计走读，含类图、时序图与裁剪源码。"><title>HiSparse + PCP 组合设计｜HiSparse / PCP 设计笔记</title><style>
+:root{--bg:#f5f2e9;--paper:#fffef9;--ink:#173c40;--text:#304347;--muted:#687976;--accent:#236e77;--line:#cfd9d3;--warm:#a56b28;--wash:#e9eeea}*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.85 "Microsoft YaHei","PingFang SC",sans-serif}a{color:var(--accent);text-underline-offset:4px}a:hover{color:var(--warm)}button,summary,a{touch-action:manipulation}a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--warm);outline-offset:3px}h1,h2,h3{color:var(--ink);line-height:1.4}h1{font:700 clamp(38px,4.3vw,65px)/1.2 "SimSun","Songti SC",serif;letter-spacing:-1px;margin:20px 0}h2{font-size:28px;margin:0 0 14px}h3{font-size:19px;margin:26px 0 10px}p{margin:0 0 17px}strong{color:var(--ink)}code,.mono{font-family:Consolas,"Cascadia Mono",monospace;font-size:.88em;overflow-wrap:anywhere}.layout{display:grid;grid-template-columns:235px minmax(0,1fr);gap:42px;max-width:1550px;padding:45px 38px 70px;margin:auto}.layout>main{min-width:0}.rail{position:sticky;top:25px;align-self:start;max-height:calc(100vh - 50px);overflow:auto;padding-right:12px}.brand{font:12px/1.7 Consolas,monospace;letter-spacing:2px;color:var(--accent);border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:16px}nav a{display:block;padding:5px 0;text-decoration:none;font-size:12px;line-height:1.6;border-bottom:1px solid var(--line)}nav a.active{font-weight:700;color:var(--ink);border-left:3px solid var(--accent);padding-left:8px}nav b{font:11px Consolas,monospace;color:var(--muted);display:inline-block;min-width:25px}.tools{display:flex;flex-wrap:wrap;gap:8px;margin:17px 0}button{font:12px/1.5 "Microsoft YaHei",sans-serif;padding:6px 10px;background:var(--paper);color:var(--accent);border:1px solid var(--line);border-radius:3px;cursor:pointer}.eyebrow,.num{font:12px/1.6 Consolas,monospace;letter-spacing:2px;color:var(--accent)}.lede{font-size:20px;max-width:900px}.meta{font-size:13px;border-block:1px solid var(--line);padding:14px 0;margin:22px 0}.meta p{margin:3px 0}.pill{display:inline-block;border:1px solid var(--accent);padding:2px 9px;color:var(--accent);font-size:12px;margin:0 6px 5px 0}.chapter{padding:42px 0 24px;border-bottom:1px solid var(--line)}.num{display:block;margin-bottom:10px}.intro{font-size:18px;color:var(--muted);margin-bottom:24px}.takeaway{border-left:4px solid var(--accent);background:var(--wash);padding:18px 22px;margin:24px 0}.note{font-size:14px;background:#f2e9d9;border-left:3px solid var(--warm);padding:15px 20px;margin:23px 0}.table-scroll{overflow:auto;margin:22px 0;border:1px solid var(--line);border-radius:4px}table{border-collapse:collapse;width:100%;font-size:14px;background:var(--paper);min-width:660px}th{background:var(--wash);color:var(--ink);text-align:left;font-weight:600}td,th{border-bottom:1px solid var(--line);padding:13px 15px;vertical-align:top}tr:last-child td{border-bottom:0}td:first-child{min-width:115px}td{overflow-wrap:anywhere}th:first-child{width:18%}.steps{padding-left:24px}.steps li{padding:0 0 14px 8px}.diagram{margin:27px 0;border:1px solid var(--line);background:var(--paper);border-radius:7px;overflow:hidden}.diagram figcaption{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:13px 17px;background:var(--wash);font-size:15px}.diagram-scroll{overflow:auto;padding:12px 8px;max-height:850px}.diagram svg{display:block;max-width:100%;height:auto;min-width:850px;font-family:"Microsoft YaHei",sans-serif}.diagram .caption{font-size:12px;color:var(--muted);border-top:1px solid var(--line);margin:0;padding:12px 16px;line-height:1.7}.diagram:fullscreen{overflow:auto;background:var(--paper);padding:12px}.diagram:fullscreen .diagram-scroll{max-height:none}.diagram:fullscreen svg{max-width:none;width:auto;min-width:100%}.evidence{margin:22px 0;border:1px solid var(--line);background:#edf0e9;border-radius:4px;font-size:13px}summary{cursor:pointer;padding:12px 15px;color:var(--accent);font-weight:600}details[open]>summary{border-bottom:1px solid var(--line)}.source{padding:12px 15px 0}.source p{margin-bottom:8px;line-height:1.6}.source a{overflow-wrap:anywhere}.source small{display:block;color:var(--muted);font-size:11px;margin-top:3px}.source pre{margin:0 0 15px;padding:15px;background:var(--paper);border:1px solid var(--line);overflow:auto;line-height:1.65;max-height:590px}.source pre code{font-size:12px;white-space:pre;overflow-wrap:normal}.rail small{font-size:11px;color:var(--muted)}footer{padding-top:25px;font-size:12px;color:var(--muted)}.toplink{font-size:12px;float:right}#progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);z-index:20;width:0}
+@media(max-width:1050px){.layout{grid-template-columns:minmax(0,1fr);padding:26px 22px 55px;gap:16px}.rail{position:static;max-height:none;padding:0}.brand{padding-bottom:10px}.rail nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px 18px}.rail small{display:none}.diagram svg{max-width:none;width:100%;min-width:900px}}
+@media(max-width:600px){.layout{padding:22px 16px 45px}.rail nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 12px}.lede{font-size:18px}.intro{font-size:16px}h2{font-size:25px}.chapter{padding:32px 0 18px}.takeaway,.note{padding:15px 16px}.source{padding:10px 9px 0}.diagram figcaption{font-size:13px;padding:10px}.diagram-full{white-space:nowrap}.meta{font-size:12px}.diagram-scroll{max-height:700px}td,th{padding:10px 12px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{.layout{display:block;padding:0}.rail,#progress,.diagram-full,.toplink{display:none}body{background:white;font-size:11px}.diagram{break-inside:avoid}.diagram-scroll{overflow:visible;max-height:none}.diagram svg{min-width:0;max-width:100%}.evidence:not([open]){display:none}.source pre{max-height:none;white-space:pre-wrap}.chapter{padding:20px 0}.table-scroll{overflow:visible}table{min-width:0;font-size:10px}}
+
+.rail .site-nav{display:block;border-bottom:1px solid var(--line);margin-bottom:16px;padding-bottom:14px}.site-nav a{padding:8px 10px;display:block;border-left:2px solid transparent;font-size:13px}.site-nav a[aria-current=page]{background:var(--wash);border-color:var(--accent);font-weight:700}.rail .toc a{display:block}.rail .toc b{margin-right:8px}.topic{font-size:12px;letter-spacing:.08em;color:var(--accent);margin:15px 0 7px}.page-turn{display:flex;justify-content:space-between;gap:18px;padding:30px 0}.page-turn a{flex:1;padding:16px 20px;border:1px solid var(--line);border-radius:5px;background:var(--paper);text-decoration:none}.page-turn small{display:block;color:var(--muted);font-size:12px}.page-turn .next{text-align:right}.example{white-space:pre;overflow:auto;padding:18px;background:var(--wash);font-size:13px;line-height:1.8;border-left:3px solid var(--accent)}.cards{display:grid;gap:20px;margin-top:30px}.card{display:block;border:1px solid var(--line);border-radius:8px;padding:25px 28px;text-decoration:none;background:var(--paper);color:var(--ink)}.card:hover{border-color:var(--accent)}.card h2{margin:8px 0 12px;font-size:28px}.card p{color:var(--muted);margin:0 0 16px}.card .enter{color:var(--accent);font-weight:600}.card-top{display:flex;justify-content:space-between;gap:20px;font-size:12px;letter-spacing:.08em;color:var(--accent)}.path{padding:20px 0;color:var(--accent);font-size:15px}.evidence summary{list-style-position:inside}
+@media(max-width:1050px){.rail .site-nav{display:flex;flex-wrap:wrap;gap:3px}.rail .toc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.rail .site-nav a{flex:1;min-width:120px}.rail .topic{margin-top:9px}}
+@media(max-width:600px){.rail .toc{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:22px 18px}.card h2{font-size:25px}.page-turn a{padding:14px 12px}.card-top{letter-spacing:0}.example{font-size:12px}}
+@media print{.page-turn{display:none}}
+</style></head><body><div id="progress" aria-hidden="true"></div><div class="layout" id="top"><aside class="rail"><div class="brand">SOURCE-VERIFIED DESIGN<br>HISPARSE / ASCEND / PCP</div><nav class="site-nav" aria-label="主题导航"><a href="index.html">目录首页</a><a href="hisparse.html">01 HiSparse 总览与详细机制</a><a href="pcp.html">02 PCP 原生设计</a><a href="hisparse-pcp.html" aria-current="page">03 HiSparse + PCP 组合设计</a></nav><div class="topic">本篇章节</div><nav class="toc" aria-label="本篇章节"><a href="#pcp"><b>01</b>PCP 的核心设计</a><a href="#pcp-flow"><b>02</b>PCP 的执行时序</a><a href="#graph-mtp"><b>03</b>图模式与 MTP</a><a href="#mixed-vs-pd"><b>04</b>混部与 PD 分离</a><a href="#support"><b>05</b>组合矩阵</a><a href="#walk"><b>06</b>怎么走读源码</a><a href="#summary"><b>07</b>把整体收回来</a></nav><div class="tools"><button id="toggle-evidence" type="button" aria-expanded="false">展开全部源码</button><button id="print-page" type="button">打印 / PDF</button></div><small>固定提交走读 · 2026-11-15<br>图可横向滚动或放大；源码默认折叠。<br>三篇独立阅读，页面保存在同目录即可离线浏览。</small></aside><main><header><span class="eyebrow">PART 03 / HiSparse + PCP 组合设计</span><h1>把 query 与 KV 写行分开。</h1><p class="lede">在前两篇的契约上，解释 HiSparse 如何保留全局控制面、承接局部 query 和 gathered KV，及图模式、MTP、PD 的边界。</p><div><span class="pill">7 章</span><span class="pill">4 张内嵌图</span><span class="pill">固定源码 · 分层走读</span></div><div class="meta">阅读顺序：<a href="hisparse.html">HiSparse</a> → <a href="pcp.html">PCP</a> → <a href="hisparse-pcp.html">HiSparse + PCP</a>。<br>本篇基于 Core 24420b7a / Ascend 14a31903；详细 SHA 与证据随页保留。</div></header><section class="chapter" id="pcp"><a class="toplink" href="#top">本篇目录 ↑</a><span class="num">03 / 01</span><h2>PCP 的核心设计：Query 行与 KV 写入行分开</h2><p class="intro">PCP 并不自动要求新写一套 HiSparse 缓存管理器。本补丁让 Core 继续看规范的请求布局，同时把 query 和 gathered write 的地址分别接对。</p><figure class="diagram"><figcaption><strong>图 9 · PCP 的三套布局与连接点</strong><button class="diagram-full" type="button">放大图</button></figcaption><div class="diagram-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1170 590" width="1170" height="590" role="img" aria-label="图 9 · PCP 的三套布局与连接点"><defs><marker id="m47-4582-8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#236e77"/></marker></defs><rect x="25" y="35" width="350" height="175" rx="8" fill="#eef3ef" stroke="#236e77"/><text x="40" y="62" font-size="15" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="40" dy="0">全局请求 / Canonical batch</tspan></text><line x1="25" x2="375" y1="76" y2="76" stroke="#236e77" opacity=".4"/><text x="40" y="100" font-size="13" fill="#203f43" text-anchor="start" font-weight="400"><tspan x="40" dy="0">请求顺序、全局 query_start_loc</tspan><tspan x="40" dy="21">Core metadata / row mirrors</tspan><tspan x="40" dy="21">不能用局部 rank 的顺序冒充</tspan></text><rect x="430" y="35" width="310" height="175" rx="8" fill="#f3eff8" stroke="#7b6892"/><text x="445" y="62" font-size="15" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="445" dy="0">本 rank Query 布局</tspan></text><line x1="430" x2="740" y1="76" y2="76" stroke="#7b6892" opacity=".4"/><text x="445" y="100" font-size="13" fill="#203f43" text-anchor="start" font-weight="400"><tspan x="445" dy="0">本 rank 计算的 query rows</tspan><tspan x="445" dy="21">local Source / Hot tables</tspan><tspan x="445" dy="21">持久 request_state_indices</tspan></text><rect x="800" y="35" width="345" height="175" rx="8" fill="#fff2de" stroke="#a56b28"/><text x="815" y="62" font-size="15" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="815" dy="0">rank-major KV 写布局</tspan></text><line x1="800" x2="1145" y1="76" y2="76" stroke="#a56b28" opacity=".4"/><text x="815" y="100" font-size="13" fill="#203f43" text-anchor="start" font-weight="400"><tspan x="815" dy="0">all_gather 后的 KV rows</tspan><tspan x="815" dy="21">gather indices / write mask</tspan><tspan x="815" dy="21">Resident / Host mirror slots</tspan></text><rect x="25" y="355" width="350" height="175" rx="8" fill="#fff2de" stroke="#a56b28"/><text x="40" y="382" font-size="15" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="40" dy="0">PCPHiSparseConnector</tspan></text><line x1="25" x2="375" y1="396" y2="396" stroke="#a56b28" opacity=".4"/><text x="40" y="420" font-size="13" fill="#203f43" text-anchor="start" font-weight="400"><tspan x="40" dy="0">继承 ActiveKVConnector</tspan><tspan x="40" dy="21">复用 Core pre_forward 顺序</tspan><tspan x="40" dy="21">只扩展 _build_load_kwargs</tspan></text><rect x="430" y="355" width="310" height="175" rx="8" fill="#eef3ef" stroke="#236e77"/><text x="445" y="382" font-size="15" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="445" dy="0">Runtime 读取路径</tspan></text><line x1="430" x2="740" y1="396" y2="396" stroke="#236e77" opacity=".4"/><text x="445" y="420" font-size="13" fill="#203f43" text-anchor="start" font-weight="400"><tspan x="445" dy="0">logical TopK + local query state</tspan><tspan x="445" dy="21">查 Resident / Hot / Host</tspan><tspan x="445" dy="21">只服务当前 rank 的 queries</tspan></text><rect x="800" y="355" width="345" height="175" rx="8" fill="#eef3ef" stroke="#236e77"/><text x="815" y="382" font-size="15" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="815" dy="0">Worker 写入 / 镜像路径</tspan></text><line x1="800" x2="1145" y1="396" y2="396" stroke="#236e77" opacity=".4"/><text x="815" y="420" font-size="13" fill="#203f43" text-anchor="start" font-weight="400"><tspan x="815" dy="0">gathered write row count</tspan><tspan x="815" dy="21">write_req_id_per_token</tspan><tspan x="815" dy="21">新 KV → Resident → Host</tspan></text><path d="M200,210 L200,355" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m47-4582-8)" /><text x="200.0" y="274.5" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="200.0" dy="0">Core 仍看全局 batch</tspan></text><path d="M585,210 L585,355" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m47-4582-8)" /><text x="585.0" y="274.5" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="585.0" dy="0">查询映射</tspan></text><path d="M975,210 L975,355" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m47-4582-8)" /><text x="975.0" y="274.5" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="975.0" dy="0">写入映射</tspan></text><path d="M375,440 L430,440" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m47-4582-8)" /><text x="400" y="425" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="400" dy="0">绑定</tspan></text><path d="M375,505 L800,505" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m47-4582-8)" /><text x="585" y="493" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="585" dy="0">同一步：写行数 / Host slots 不等于 query 行数</tspan></text></svg></div><p class="caption">当前补丁的职责是分离三套地址。Source table 的 query 选择与 Host 镜像目标 slots 不再被错误地强制共用同一个 batch 视角。 · 箭头表示标注的调用或数据关系，非未标明的继承关系。版本：Core 24420b7a / Ascend 14a31903。</p></figure><div class="table-scroll"><table><thead><tr><th>字段 / Buffer</th><th>代表什么</th><th>消费者</th></tr></thead><tbody><tr><td><code>hisparse_request_state_indices</code></td><td>本 rank query 对应的持久 request state。</td><td>每层 Runtime 的 Resident / Hot 解析。</td></tr><tr><td><code>hisparse_num_write_tokens</code></td><td>all_gather 后需要考虑的写入行数；不等于本地 query 行数。</td><td>write_target、Host mirror 的切片与容量。</td></tr><tr><td><code>hisparse_num_valid_write_rows</code></td><td>有效写入行的设备标量，用于固定图几何下的有效范围。</td><td>PCP scatter；padding 仍需 write mask / 无效 slot。</td></tr><tr><td><code>hisparse_write_has_prefill</code></td><td>全局写入中是否有 Prefill，来源 pcp_has_global_prefill。</td><td>镜像策略；不能只看本 rank 是不是 Decode batch。</td></tr><tr><td><code>write_req_id_per_token</code></td><td>每个 gathered write row 属于哪个规范请求；无效行标 -1。</td><td>新 Host 写入对应的 Hot invalidation。</td></tr><tr><td><code>_gathered_kv_slot_mappings</code></td><td>all_gather 行顺序对应的 Resident / Host 写入位置。</td><td>新 KV scatter 与 D2H 镜像。</td></tr><tr><td><code>_local_block_tables</code></td><td>服务本地 query 的 Source / Hot 查表视角。</td><td>Runtime query 读路径；不拿它替代全局镜像目标。</td></tr></tbody></table></div><div class="takeaway"><strong>教学例子（只解释布局，不代表固定切分算法）：</strong>假设某步 PCP=2，每 rank 本地有 2 行。rank0 算 [a,b]，rank1 算 [c,pad]，gather 后物理行序是 [a,b,c,pad]。rank0 的 query 仍只有 [a,b]；Resident 与 Host 镜像必须覆盖全局有效写行 [a,b,c]，pad 被 mask。若按本地 query 行数截断镜像，就会漏掉 c；若把 pad 认作真实请求，就会污染缓存。</div><details class="evidence"><summary>源码依据 · query state、全局写行、规范请求与持久绑定</summary><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/hisparse/pcp.py#L15-L33" target="_blank" rel="noopener">vllm_ascend/hisparse/pcp.py · L15–33 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code>  15  def prepare_pcp_query_metadata(metadata, states, valid_rows, local_states, world_size):
+  16      &quot;&quot;&quot;Keep graph inputs at fixed addresses across capture and real steps.&quot;&quot;&quot;
+  17      states.fill_(-1)
+  18      states[: local_states.numel()].copy_(local_states)
+  19      count = metadata.num_input_tokens * world_size
+  20      valid_rows.fill_(count)
+  21      metadata.hisparse_request_state_indices = states
+  22      metadata.hisparse_num_write_tokens = count
+  23      metadata.hisparse_num_valid_write_rows = valid_rows
+  24      metadata.hisparse_write_has_prefill = metadata.pcp_has_global_prefill
+  25  
+  26  
+  27  def get_pcp_write_request_ids(global_batch, gather_indices, write_mask):
+  28      &quot;&quot;&quot;Map gathered KV writes to canonical requests, shared by all layers.&quot;&quot;&quot;
+  29      rows = torch.bucketize(gather_indices.contiguous(), global_batch.query_start_loc[1:].contiguous(), right=True).to(
+  30          torch.int32
+  31      )
+  32      rows.masked_fill_(~write_mask, -1)
+  33      return rows</code></pre></div><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/hisparse/pcp.py#L39-L72" target="_blank" rel="noopener">vllm_ascend/hisparse/pcp.py · L39–72 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code>  39      def __init__(self, connector, manager, block_tables, host_group_id):
+  40          self.__dict__.update(connector.__dict__)
+  41          self._pcp_manager = manager
+  42          self._global_block_tables = block_tables
+  43          self._draft_request_states = torch.empty_like(block_tables.input_block_tables[0][:, 0], dtype=torch.int32)
+  44          worker = self.kv_connector.connector_worker
+  45          self._pcp_bindings = []
+  46          for cache in worker.cache_handles:
+  47              matches = [
+  48                  group
+  49                  for group, slots in enumerate(block_tables.slot_mappings)
+  50                  if slots.data_ptr() == cache.slot_mapping.data_ptr()
+  51              ]
+  52              if len(matches) != 1:
+  53                  raise RuntimeError(&quot;HiSparse Resident mapping must identify one KV group&quot;)
+  54              hot_groups = [
+  55                  group
+  56                  for group, table in enumerate(block_tables.input_block_tables)
+  57                  if table.data_ptr() == cache.runtime.hot_block_table.data_ptr()
+  58              ]
+  59              if len(hot_groups) != 1:
+  60                  raise RuntimeError(&quot;HiSparse Hot table must identify one KV group&quot;)
+  61              self._pcp_bindings.append((cache, matches[0], hot_groups[0]))
+  62          self._pcp_host_group_id = host_group_id
+  63          # Graph warmup/capture bypasses connector.pre_forward. Bind the PCP
+  64          # persistent storage now so capture and replay use identical addresses.
+  65          slots = manager._gathered_kv_slot_mappings
+  66          tables = manager._local_block_tables
+  67          assert slots is not None and tables is not None
+  68          for cache, group_id, hot_group_id in self._pcp_bindings:
+  69              cache.slot_mapping = slots[group_id]
+  70              cache.mirror_slot_mapping = slots[host_group_id]
+  71              cache.source_block_table = tables[host_group_id]
+  72              cache.runtime.hot_block_table = tables[hot_group_id]</code></pre></div><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/hisparse/pcp.py#L99-L129" target="_blank" rel="noopener">vllm_ascend/hisparse/pcp.py · L99–129 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code>  99      def _build_load_kwargs(self, scheduler_output, input_batch, attn_metadata):
+ 100          if input_batch is None:
+ 101              return super()._build_load_kwargs(scheduler_output, input_batch, attn_metadata)
+ 102          # The eager runner passes metadata through the active forward context;
+ 103          # only graph capture supplies it explicitly to this connector.
+ 104          if attn_metadata is None and is_forward_context_available():
+ 105              attn_metadata = get_forward_context().attn_metadata
+ 106          manager = self._pcp_manager
+ 107          global_batch = manager.global_batch
+ 108          indices = manager._padded_gather_idx
+ 109          mask = manager._gathered_kv_write_mask
+ 110          slots = manager._gathered_kv_slot_mappings
+ 111          assert indices is not None and mask is not None and slots is not None
+ 112          count = indices.numel()
+ 113          local_tables = manager._local_block_tables
+ 114          assert local_tables is not None
+ 115          for cache, group_id, hot_group_id in self._pcp_bindings:
+ 116              cache.slot_mapping = slots[group_id, :count]
+ 117              cache.mirror_slot_mapping = slots[self._pcp_host_group_id, :count]
+ 118              # Source and Hot are indexed by local query request row. Resident
+ 119              # residency is indexed by persistent state slot and must stay intact.
+ 120              cache.source_block_table = local_tables[self._pcp_host_group_id]
+ 121              cache.runtime.hot_block_table = local_tables[hot_group_id]
+ 122          write_request_ids = get_pcp_write_request_ids(global_batch, indices, mask)
+ 123          for metadata in (attn_metadata or {}).values():
+ 124              metadata.hisparse_write_req_id_per_token = write_request_ids
+ 125          # Core owns request lifecycle and load scheduling. Only its load kwargs
+ 126          # need canonical requests and a gathered Resident slot snapshot length.
+ 127          load_kwargs = super()._build_load_kwargs(scheduler_output, global_batch, attn_metadata)
+ 128          load_kwargs[&quot;num_tokens&quot;] = count
+ 129          return load_kwargs</code></pre></div></details></section><section class="chapter" id="pcp-flow"><a class="toplink" href="#top">本篇目录 ↑</a><span class="num">03 / 02</span><h2>PCP 的执行时序：本地生产，字节聚合，全局写入，本地查询</h2><p class="intro">PCP 的 KV all_gather 与 HiSparse 的 Host → Hot 是两次不同的数据移动。它们分别解决新 KV 的一致写入和历史稀疏读取。</p><figure class="diagram"><figcaption><strong>图 10 · PCP + HiSparse 的 Target 步骤</strong><button class="diagram-full" type="button">放大图</button></figcaption><div class="diagram-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1025 1077" width="1025" height="1077" role="img" aria-label="图 10 · PCP + HiSparse 的 Target 步骤"><defs><marker id="m50-6077-9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#236e77"/></marker></defs><rect x="7.0" y="14" width="186" height="61" rx="7" fill="#eef3ef" stroke="#236e77"/><text x="100.0" y="39" font-size="13" fill="#203f43" text-anchor="middle" font-weight="600"><tspan x="100.0" dy="0">PCP Manager</tspan></text><path d="M100.0,76 L100.0,1057" stroke="#b0bebc" stroke-dasharray="4 5"/><rect x="213.25" y="14" width="186" height="61" rx="7" fill="#eef3ef" stroke="#236e77"/><text x="306.25" y="39" font-size="13" fill="#203f43" text-anchor="middle" font-weight="600"><tspan x="306.25" dy="0">PCP Connector</tspan></text><path d="M306.25,76 L306.25,1057" stroke="#b0bebc" stroke-dasharray="4 5"/><rect x="419.5" y="14" width="186" height="61" rx="7" fill="#eef3ef" stroke="#236e77"/><text x="512.5" y="39" font-size="13" fill="#203f43" text-anchor="middle" font-weight="600"><tspan x="512.5" dy="0">本 rank Attention</tspan></text><path d="M512.5,76 L512.5,1057" stroke="#b0bebc" stroke-dasharray="4 5"/><rect x="625.75" y="14" width="186" height="61" rx="7" fill="#eef3ef" stroke="#236e77"/><text x="718.75" y="39" font-size="13" fill="#203f43" text-anchor="middle" font-weight="600"><tspan x="718.75" dy="0">PCP Group / KV</tspan></text><path d="M718.75,76 L718.75,1057" stroke="#b0bebc" stroke-dasharray="4 5"/><rect x="832.0" y="14" width="186" height="61" rx="7" fill="#eef3ef" stroke="#236e77"/><text x="925.0" y="39" font-size="13" fill="#203f43" text-anchor="middle" font-weight="600"><tspan x="925.0" dy="0">Host Worker / Runtime</tspan></text><path d="M925.0,76 L925.0,1057" stroke="#b0bebc" stroke-dasharray="4 5"/><rect x="10" y="98" width="1005" height="40" rx="4" fill="#e4ebe9"/><text x="26" y="123" font-size="14" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="26" dy="0">① 先确定 query 布局与 gathered write 布局</tspan></text><path d="M100.0,197 L306.25,197" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m50-6077-9)" /><text x="203.125" y="189.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="203.125" dy="0"></tspan></text><text x="203.125" y="168" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="203.125" dy="0">global_batch / local tables / gathered slots / mask</tspan></text><path d="M306.25,274 L925.0,274" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m50-6077-9)" /><text x="615.625" y="266.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="615.625" dy="0"></tspan></text><text x="615.625" y="245" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="615.625" dy="0">复用 Core load kwargs；绑定全局镜像 + 本地查询表</tspan></text><path d="M100.0,351 L512.5,351" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m50-6077-9)" /><text x="306.25" y="343.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="306.25" dy="0"></tspan></text><text x="306.25" y="322" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="306.25" dy="0">本地 queries + persistent state + write metadata</tspan></text><rect x="10" y="393" width="1005" height="40" rx="4" fill="#e4ebe9"/><text x="26" y="418" font-size="14" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="26" dy="0">② 生产与写入：新 KV 的 PCP 聚合</tspan></text><path d="M512.5,469 h-50 v26 h50" fill="none" stroke="#236e77" marker-end="url(#m50-6077-9)"/><text x="452.5" y="474" font-size="12" fill="#203f43" text-anchor="end" font-weight="400"><tspan x="452.5" dy="0">prolog / C8 pack 写入本地 scratch</tspan></text><path d="M512.5,569 L718.75,569" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m50-6077-9)" /><text x="615.625" y="561.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="615.625" dy="0"></tspan></text><text x="615.625" y="540" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="615.625" dy="0">按 int8 byte view all_gather(dim=0)</tspan></text><path d="M718.75,646 L512.5,646" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m50-6077-9)" stroke-dasharray="5,4"/><text x="615.625" y="638.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="615.625" dy="0"></tspan></text><text x="615.625" y="617" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="615.625" dy="0">rank-major packed rows</tspan></text><path d="M512.5,723 L925.0,723" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m50-6077-9)" /><text x="718.75" y="715.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="718.75" dy="0"></tspan></text><text x="718.75" y="694" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="718.75" dy="0">按 gathered slots scatter → Resident；镜像 → Host</tspan></text><rect x="10" y="765" width="1005" height="40" rx="4" fill="#e4ebe9"/><text x="26" y="790" font-size="14" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="26" dy="0">③ 读取与计算：只为本 rank query 解析历史 TopK</tspan></text><path d="M512.5,864 L925.0,864" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m50-6077-9)" /><text x="718.75" y="856.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="718.75" dy="0"></tspan></text><text x="718.75" y="835" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="718.75" dy="0">logical TopK → swap_in(本地请求状态 / tables)</tspan></text><path d="M925.0,941 L512.5,941" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m50-6077-9)" stroke-dasharray="5,4"/><text x="718.75" y="933.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="718.75" dy="0"></tspan></text><text x="718.75" y="912" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="718.75" dy="0">本层 Host miss → Hot 完成后返回物理索引</tspan></text><path d="M512.5,995 h-50 v26 h50" fill="none" stroke="#236e77" marker-end="url(#m50-6077-9)"/><text x="452.5" y="1000" font-size="12" fill="#203f43" text-anchor="end" font-weight="400"><tspan x="452.5" dy="0">SFA 使用 Resident / Hot 物理 KV</tspan></text></svg></div><p class="caption">该图描述需要 KV gather 的 target 路径。不是每个分支都强制 gather；_needs_kv_gather 决定 scratch / 直接写入的选择。 · 箭头表示标注的调用或数据关系，非未标明的继承关系。版本：Core 24420b7a / Ascend 14a31903。</p></figure><ol class="steps"><li><strong>为什么先写 scratch？</strong>prolog 接收的是本地 token 的输入。直接把 all_gather 后的 global slots 传给本地写操作，会把输入行与目标行错配。先生产本地 packed rows，聚合后再 scatter。</li><li><strong>为什么按字节聚合？</strong>C8 行内有 FP8、BF16 与 FP32 三种组成；对整个容器错误地按一种浮点数解释或重排，会破坏 RoPE 和 scales。</li><li><strong>为什么还要全局 batch？</strong>Core Coordinator 生成的 request row_mirrors 和 Source block table 基于规范请求。wrapper 通过全局请求恢复 gathered row 的归属，让 D2H 与 invalidation 覆盖正确请求。</li><li><strong>为什么本地 state 不能复用全局顺序？</strong>query 已按 rank 改变位置；LRU / Resident 的状态索引仍是持久请求索引，传错会跨请求命中。</li></ol><details class="evidence"><summary>源码依据 · scratch、packed all_gather 与 scatter</summary><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/attention/sfa_hisparse.py#L328-L374" target="_blank" rel="noopener">vllm_ascend/attention/sfa_hisparse.py · L328–374 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code> 328      def _sfa_preprocess_prolog_v3(self, hidden_states, kv_cache, cos, sin, slot_mapping, *, attn_metadata=None):
+ 329          if attn_metadata is None:
+ 330              raise ValueError(&quot;HiSparse Prolog requires current row-validity metadata&quot;)
+ 331          rows = hidden_states.shape[0]
+ 332          if self.pcp_enabled and needs_pcp_kv_gather(attn_metadata, self.is_pcp_decode_sharded):
+ 333              # Prolog writes local rows before the collective. Its cache indices
+ 334              # cannot use the rank-major global Resident write mapping yet.
+ 335              scratch, local_slots = self._pcp_prolog_workspace()
+ 336              return super()._sfa_preprocess_prolog_v3(
+ 337                  hidden_states,
+ 338                  (scratch,),
+ 339                  cos,
+ 340                  sin,
+ 341                  local_slots[:rows],
+ 342                  attn_metadata=attn_metadata,
+ 343              )
+ 344          cache = self.hisparse_cache
+ 345          destination, mapping, _ = cache.write_target(rows, slot_mapping.numel())
+ 346          result = super()._sfa_preprocess_prolog_v3(
+ 347              hidden_states,
+ 348              (destination.unsqueeze(2),),
+ 349              cos,
+ 350              sin,
+ 351              self._prolog_slot_mapping(mapping, rows),
+ 352              attn_metadata=attn_metadata,
+ 353          )
+ 354          finish_hisparse_kv_update(cache, attn_metadata)
+ 355          return result
+ 356  
+ 357      def _sync_pcp_kv_cache(self, kv_cache, attn_metadata):
+ 358          scratch, _ = self._pcp_prolog_workspace()
+ 359          rows = attn_metadata.num_input_tokens
+ 360          packed = scratch.view(torch.int8).view(-1, scratch.shape[-1])[:rows]
+ 361          # Preserve C8 latent, BF16 RoPE and FP32 scales byte-for-byte. The
+ 362          # collective has the same rank-major ordering as gathered slot mapping.
+ 363          gathered = get_pcp_group().all_gather(packed, dim=0)
+ 364          cache = self.hisparse_cache
+ 365          destination, mapping, count = cache.write_target(gathered.shape[0], gathered.shape[0])
+ 366          payload = gathered[:count].view(torch.uint8)
+ 367          cache_ops.scatter_packed_kv(
+ 368              payload,
+ 369              payload[:, :0],
+ 370              destination.view(torch.uint8),
+ 371              mapping,
+ 372              attn_metadata.hisparse_num_valid_write_rows,
+ 373          )
+ 374          finish_hisparse_kv_update(cache, attn_metadata)</code></pre></div><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/patch/worker/patch_hisparse.py#L23-L43" target="_blank" rel="noopener">vllm_ascend/patch/worker/patch_hisparse.py · L23–43 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code>  23  def write_target(self, num_input_rows: int, num_slot_rows: int) -&gt; tuple[torch.Tensor, torch.Tensor, int]:
+  24      assert self.view is not None and self.slot_mapping is not None
+  25      num_rows = min(num_input_rows, num_slot_rows, self.num_write_tokens)
+  26      # Gathered decode includes rank padding masked by negative slots.
+  27      if self.decode_batch and not self.write_has_prefill and self.num_write_tokens == self.num_actual_tokens:
+  28          num_rows = min(num_rows, self.runtime.max_num_reqs)
+  29      return self.view.cache, self.slot_mapping[:num_rows], num_rows
+  30  
+  31  
+  32  def finish_kv_update(self) -&gt; None:
+  33      # HiSparse is optional on supported Core releases; load it only on use.
+  34      from vllm.v1.hisparse import runtime as runtime_module
+  35  
+  36      if self.dummy_batch:
+  37          return
+  38      if (
+  39          self.submit_layer_mirror is not None
+  40          and self.write_has_prefill
+  41          and runtime_module.get_forward_context().cudagraph_runtime_mode != CUDAGraphMode.FULL
+  42      ):
+  43          self.submit_layer_mirror()</code></pre></div><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/patch/worker/patch_hisparse.py#L46-L96" target="_blank" rel="noopener">vllm_ascend/patch/worker/patch_hisparse.py · L46–96 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code>  46  def _enqueue_host_mirror(
+  47      self,
+  48      ready_event: torch.Event | None = None,
+  49  ) -&gt; None:
+  50      active = [(index, handle) for index, handle in enumerate(self.cache_handles) if handle.num_write_tokens != 0]
+  51      if not active:
+  52          return
+  53  
+  54      def mirror_key(handle: HiSparseCacheHandle) -&gt; tuple:
+  55          slots = handle.mirror_slot_mapping
+  56          return (
+  57              handle.num_write_tokens,
+  58              handle.write_has_prefill,
+  59              handle.host_mirror_required,
+  60              handle.runtime.eager_host_mirror,
+  61              None if slots is None else slots.data_ptr(),
+  62          )
+  63  
+  64      keys = {mirror_key(handle) for _, handle in active}
+  65      if len(keys) &gt; 1:
+  66          raise RuntimeError(f&quot;HiSparse cache layers disagree on mirror metadata: {list(keys)}.&quot;)
+  67      cache = active[0][1]
+  68      if not cache.host_mirror_required:
+  69          return
+  70      dst_slots = cache.mirror_slot_mapping
+  71      if dst_slots is None:
+  72          raise RuntimeError(&quot;HiSparse host mirror has no source slot mapping.&quot;)
+  73      num_rows = min(cache.num_write_tokens, dst_slots.numel())
+  74      if num_rows == 0:
+  75          return
+  76      if self.is_host_writer:
+  77          # The drafter has not written its layers&#x27; rows yet; the next
+  78          # start_step mirrors them after it runs.
+  79          self._draft_mirror_pending = bool(self._draft_layers)
+  80          expected_layers = {index for index, _ in active}.difference(self._draft_layers)
+  81          if self._per_layer_mirrored and self._per_layer_mirrored != expected_layers:
+  82              raise RuntimeError(
+  83                  &quot;HiSparse per-layer DMA did not mirror every active layer: &quot;
+  84                  f&quot;expected {sorted(expected_layers)}, got &quot;
+  85                  f&quot;{sorted(self._per_layer_mirrored)}.&quot;
+  86              )
+  87          pending_layers = tuple(sorted(expected_layers - self._submitted_mirror_layers))
+  88          if pending_layers:
+  89              self._enqueue_row_dma(pending_layers, ready_event=ready_event)
+  90              self._submitted_mirror_layers.update(pending_layers)
+  91      assert cache.write_req_id_per_token is not None
+  92      self._invalidate_written_slots(
+  93          [handle.runtime for _, handle in active if handle.runtime.is_group_leader],
+  94          dst_slots[:num_rows],
+  95          cache.write_req_id_per_token[:num_rows],
+  96      )</code></pre></div></details></section><section class="chapter" id="graph-mtp"><a class="toplink" href="#top">本篇目录 ↑</a><span class="num">03 / 03</span><h2>图模式与 MTP：固定几何不等于固定请求内容</h2><p class="intro">同一套 buffer 在捕获和回放之间地址要稳定，内容则每步更新。Target 与 Draft 的 query / write 布局还会在一个 step 内发生变化。</p><div class="table-scroll"><table><thead><tr><th>路径</th><th>Query / KV 写入特征</th><th>本补丁接法</th></tr></thead><tbody><tr><td>Target Prefill / request-sharded Target Decode</td><td>本地 queries；需要聚合时使用 rank-major KV writes。</td><td>local query tables + gathered Resident / Host slots。</td></tr><tr><td>Draft Prefill</td><td>复用 target 的 PCP query / gathered KV 布局。</td><td>prepare_draft_prefill() 绑定相同方向的 slots / tables。</td></tr><tr><td>后续 replicated Draft Decode</td><td>每 rank 做复制的草稿步骤，不做同样的 KV gather。</td><td>prepare_draft_decode() 回切 global tables / slots，并复制对应 draft state。</td></tr><tr><td>capture / replay</td><td>graph warmup 可绕过正常 connector.pre_forward。</td><td>构造 wrapper 时提前绑定持久 slots / tables；query states 和 valid rows 使用持久 buffer。</td></tr><tr><td>FULL graph 镜像</td><td>逐层 Python finish_kv_update 不随每次 replay 执行。</td><td>避免 capture 时错误提交镜像；forward 完成后走 worker 镜像与事件。</td></tr></tbody></table></div><figure class="diagram"><figcaption><strong>图 11 · 一个含 Draft 的 step：何时切换布局</strong><button class="diagram-full" type="button">放大图</button></figcaption><div class="diagram-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1130 440" width="1130" height="440" role="img" aria-label="图 11 · 一个含 Draft 的 step：何时切换布局"><defs><marker id="m53-2838-10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#236e77"/></marker></defs><rect x="25" y="45" width="315" height="150" rx="8" fill="#fff2de" stroke="#a56b28"/><text x="40" y="72" font-size="15" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="40" dy="0">Target forward</tspan></text><line x1="25" x2="340" y1="86" y2="86" stroke="#a56b28" opacity=".4"/><text x="40" y="110" font-size="13" fill="#203f43" text-anchor="start" font-weight="400"><tspan x="40" dy="0">request-sharded queries</tspan><tspan x="40" dy="21">gathered KV writes</tspan><tspan x="40" dy="21">本地 state + 全局写 slots</tspan></text><rect x="410" y="45" width="310" height="150" rx="8" fill="#eef3ef" stroke="#236e77"/><text x="425" y="72" font-size="15" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="425" dy="0">Draft Prefill / 初始绑定</tspan></text><line x1="410" x2="720" y1="86" y2="86" stroke="#236e77" opacity=".4"/><text x="425" y="110" font-size="13" fill="#203f43" text-anchor="start" font-weight="400"><tspan x="425" dy="0">沿 target PCP 布局</tspan><tspan x="425" dy="21">草稿层 KV 的写入入口</tspan></text><rect x="790" y="45" width="315" height="150" rx="8" fill="#f3eff8" stroke="#7b6892"/><text x="805" y="72" font-size="15" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="805" dy="0">后续 Draft Decode</tspan></text><line x1="790" x2="1105" y1="86" y2="86" stroke="#7b6892" opacity=".4"/><text x="805" y="110" font-size="13" fill="#203f43" text-anchor="start" font-weight="400"><tspan x="805" dy="0">replicated queries / writes</tspan><tspan x="805" dy="21">回切 global tables / slots</tspan><tspan x="805" dy="21">专用 draft request states</tspan></text><path d="M340,120 L410,120" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m53-2838-10)" /><text x="375.0" y="112.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="375.0" dy="0">切换</tspan></text><path d="M720,120 L790,120" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m53-2838-10)" /><text x="755.0" y="112.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="755.0" dy="0">切换</tspan></text><rect x="300" y="290" width="540" height="115" rx="8" fill="#eef3ef" stroke="#236e77"/><text x="315" y="317" font-size="15" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="315" dy="0">Finalize / 下一 start_step</tspan></text><line x1="300" x2="840" y1="331" y2="331" stroke="#236e77" opacity=".4"/><text x="315" y="355" font-size="13" fill="#203f43" text-anchor="start" font-weight="400"><tspan x="315" dy="0">等待必要 Host write；补齐前步 draft mirror</tspan><tspan x="315" dy="21">页完成回报前，不能将未写完的 Draft KV 当作耐久历史</tspan></text><path d="M945,195 L840,290" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m53-2838-10)" /><text x="960" y="255" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="960" dy="0">完成后 join</tspan></text></svg></div><p class="caption">图是布局与同步的职责顺序，不把特定 MTP 层数写成所有模型固定流程；真实执行由 speculator 控制。 · 箭头表示标注的调用或数据关系，非未标明的继承关系。版本：Core 24420b7a / Ascend 14a31903。</p></figure><div class="takeaway"><strong>为什么改到 vLLM 类的方法？</strong>Core 原接口把部分 query 行数 / has_prefill 与写入视角绑定在一起；PCP gather 后二者不再相等。当前选择在 Ascend 内安装有限的运行时适配，Core 文件没有改动，但 Core 对象的部分运行行为确实被扩展。</div><div class="table-scroll"><table><thead><tr><th>被适配的方法</th><th>改动目的</th></tr></thead><tbody><tr><td><code>HiSparseCacheHandle._prepare_for_batch</code></td><td>先调用 Core 原方法，再绑定 PCP 的 query state、write count、write IDs 和镜像条件。</td></tr><tr><td><code>HiSparseCacheHandle.write_target</code></td><td>gathered write 不能按本地 Decode query 数误截断。</td></tr><tr><td><code>HiSparseCacheHandle.finish_kv_update</code></td><td>根据全局 write_has_prefill 和 graph 模式安排镜像。</td></tr><tr><td><code>HiSparseConnectorWorker._clear_forward_mirror_state</code></td><td>保留 Core 清理逻辑，再清理新增的 write 视角字段。</td></tr><tr><td><code>HiSparseConnectorWorker._enqueue_host_mirror</code></td><td>使用 gathered write 的行数、slots 与 request IDs；调用 Core 行 DMA。</td></tr></tbody></table></div><details class="evidence"><summary>源码依据 · Draft 布局切换、五个适配点与捕获前容量</summary><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/hisparse/pcp.py#L74-L97" target="_blank" rel="noopener">vllm_ascend/hisparse/pcp.py · L74–97 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code>  74      def prepare_draft_prefill(self):
+  75          &quot;&quot;&quot;Draft prefill reuses the target&#x27;s PCP query and gathered KV layout.&quot;&quot;&quot;
+  76          slots = self._pcp_manager._gathered_kv_slot_mappings
+  77          tables = self._pcp_manager._local_block_tables
+  78          for cache, group_id, hot_group_id in self._pcp_bindings:
+  79              if cache.draft_layer:
+  80                  cache.slot_mapping = slots[group_id]
+  81                  cache.mirror_slot_mapping = slots[self._pcp_host_group_id]
+  82                  cache.source_block_table = tables[self._pcp_host_group_id]
+  83                  cache.runtime.hot_block_table = tables[hot_group_id]
+  84  
+  85      def prepare_draft_decode(self, request_states, num_reqs):
+  86          &quot;&quot;&quot;Later draft steps are replicated; use global rows without KV gather.&quot;&quot;&quot;
+  87          states = self._draft_request_states
+  88          states.fill_(-1)
+  89          states[:num_reqs].copy_(request_states[:num_reqs])
+  90          block_tables = self._global_block_tables
+  91          for cache, group_id, hot_group_id in self._pcp_bindings:
+  92              if cache.draft_layer:
+  93                  cache.slot_mapping = block_tables.slot_mappings[group_id]
+  94                  cache.mirror_slot_mapping = block_tables.slot_mappings[self._pcp_host_group_id]
+  95                  cache.source_block_table = block_tables.input_block_tables[self._pcp_host_group_id]
+  96                  cache.runtime.hot_block_table = block_tables.input_block_tables[hot_group_id]
+  97                  cache.runtime.request_state_indices = states</code></pre></div><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/patch/worker/patch_hisparse.py#L99-L153" target="_blank" rel="noopener">vllm_ascend/patch/worker/patch_hisparse.py · L99–153 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code>  99  def install_pcp_cache_layout() -&gt; None:
+ 100      &quot;&quot;&quot;Install once, before preparing or capturing the first PCP forward.&quot;&quot;&quot;
+ 101      # Worker registration must also import on Core releases without HiSparse.
+ 102      from vllm.distributed.kv_transfer.kv_connector.v1.hisparse.worker import HiSparseConnectorWorker
+ 103      from vllm.v1.hisparse.runtime import HiSparseCacheHandle
+ 104  
+ 105      if getattr(HiSparseCacheHandle, &quot;_ascend_pcp_layout_installed&quot;, False):
+ 106          return
+ 107      original_prepare = HiSparseCacheHandle._prepare_for_batch
+ 108      original_clear = HiSparseConnectorWorker._clear_forward_mirror_state
+ 109  
+ 110      @wraps(original_prepare)
+ 111      def prepare(self, attn_metadata: Any | None) -&gt; None:
+ 112          # Preserve upstream decode/group-prefetch policy across Core revisions.
+ 113          original_prepare(self, attn_metadata)
+ 114          self.num_write_tokens = getattr(attn_metadata, &quot;hisparse_num_write_tokens&quot;, self.num_actual_tokens)
+ 115          self.write_req_id_per_token = getattr(attn_metadata, &quot;hisparse_write_req_id_per_token&quot;, self.req_id_per_token)
+ 116          self.write_has_prefill = getattr(attn_metadata, &quot;hisparse_write_has_prefill&quot;, not self.decode_batch)
+ 117          query_states = getattr(attn_metadata, &quot;hisparse_request_state_indices&quot;, None)
+ 118          if query_states is not None:
+ 119              self.runtime.request_state_indices = query_states
+ 120          self.host_mirror_required = attn_metadata is not None and (
+ 121              self.write_has_prefill or self.runtime.eager_host_mirror
+ 122          )
+ 123  
+ 124      @wraps(original_clear)
+ 125      def clear(self) -&gt; None:
+ 126          original_clear(self)
+ 127          for cache in self.cache_handles:
+ 128              cache.num_write_tokens = 0
+ 129              cache.write_req_id_per_token = None
+ 130              cache.write_has_prefill = False
+ 131  
+ 132      HiSparseCacheHandle._prepare_for_batch = prepare
+ 133      HiSparseCacheHandle.write_target = write_target
+ 134      HiSparseCacheHandle.finish_kv_update = finish_kv_update
+ 135      HiSparseConnectorWorker._clear_forward_mirror_state = clear
+ 136      HiSparseConnectorWorker._enqueue_host_mirror = _enqueue_host_mirror
+ 137      HiSparseCacheHandle._ascend_pcp_layout_installed = True
+ 138  
+ 139  
+ 140  def prepare_pcp_mirror_staging(worker: HiSparseConnectorWorker) -&gt; None:
+ 141      &quot;&quot;&quot;Size pinned Host staging for gathered rows before graph capture.&quot;&quot;&quot;
+ 142      config = worker.vllm_config
+ 143      capacity = (
+ 144          config.scheduler_config.max_num_batched_tokens * config.parallel_config.prefill_context_parallel_size
+ 145          + config.scheduler_config.max_num_seqs * (config.num_lookahead_tokens + 1)
+ 146      )
+ 147      staging = worker._slot_mapping_staging
+ 148      if staging is not None and staging.slots.numel() &lt; capacity:
+ 149          staging.slots = torch.empty(capacity, dtype=torch.int64, pin_memory=True)
+ 150      for cache in worker.cache_handles:
+ 151          cache.num_write_tokens = 0
+ 152          cache.write_req_id_per_token = None
+ 153          cache.write_has_prefill = False</code></pre></div><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/attention/sfa_hisparse.py#L35-L43" target="_blank" rel="noopener">vllm_ascend/attention/sfa_hisparse.py · L35–43 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code>  35  def finish_hisparse_kv_update(cache, metadata) -&gt; None:
+  36      &quot;&quot;&quot;Publish real writes; capture forwards have no connector step to mirror.
+  37  
+  38      V2 runs both FULL-graph warmup and capture with runtime mode NONE.
+  39      Preserve the device KV writes in those forwards, but leave Host mirror
+  40      submission to the real connector step after graph replay.
+  41      &quot;&quot;&quot;
+  42      if not getattr(metadata, &quot;hisparse_for_capture&quot;, False):
+  43          cache.finish_kv_update()</code></pre></div></details></section><section class="chapter" id="mixed-vs-pd"><a class="toplink" href="#top">本篇目录 ↑</a><span class="num">03 / 04</span><h2>混部与 PD 分离：计算相似，缓存交付边界不同</h2><p class="intro">Prefill 的模型计算可以相同，但 PD 中的 P 与 D 是两个引擎。P 的本地 Resident 状态、设备块编号和完成事件，不能直接成为 D 的本地状态。</p><figure class="diagram"><figcaption><strong>图 12 · 部署边界：单引擎内部卸载 vs 跨引擎交付</strong><button class="diagram-full" type="button">放大图</button></figcaption><div class="diagram-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1170 610" width="1170" height="610" role="img" aria-label="图 12 · 部署边界：单引擎内部卸载 vs 跨引擎交付"><defs><marker id="m56-4722-11" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#236e77"/></marker></defs><text x="30" y="30" font-size="18" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="30" dy="0">A · 混部：同一 Engine</tspan></text><rect x="30" y="65" width="290" height="145" rx="8" fill="#eef3ef" stroke="#236e77"/><text x="45" y="92" font-size="15" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="45" dy="0">Scheduler + Coordinator</tspan></text><line x1="30" x2="320" y1="106" y2="106" stroke="#236e77" opacity=".4"/><text x="45" y="130" font-size="13" fill="#203f43" text-anchor="start" font-weight="400"><tspan x="45" dy="0">同一请求生命周期</tspan><tspan x="45" dy="21">同一套页状态 / 前缀发布</tspan></text><rect x="420" y="65" width="300" height="145" rx="8" fill="#eef3ef" stroke="#236e77"/><text x="435" y="92" font-size="15" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="435" dy="0">HBM Resident / Hot</tspan></text><line x1="420" x2="720" y1="106" y2="106" stroke="#236e77" opacity=".4"/><text x="435" y="130" font-size="13" fill="#203f43" text-anchor="start" font-weight="400"><tspan x="435" dy="0">Prefill 新 KV；Decode 稀疏读</tspan><tspan x="435" dy="21">PCP 仍属于该 Engine 内部</tspan></text><rect x="820" y="65" width="320" height="145" rx="8" fill="#eaf0fa" stroke="#5c7caa"/><text x="835" y="92" font-size="15" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="835" dy="0">本地 Host Source</tspan></text><line x1="820" x2="1140" y1="106" y2="106" stroke="#5c7caa" opacity=".4"/><text x="835" y="130" font-size="13" fill="#203f43" text-anchor="start" font-weight="400"><tspan x="835" dy="0">本地卸载后备</tspan><tspan x="835" dy="21">不需要跨 Engine delivery</tspan></text><path d="M320,130 L420,130" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m56-4722-11)" /><text x="370.0" y="122.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="370.0" dy="0">调度</tspan></text><path d="M720,110 L820,110" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m56-4722-11)" /><text x="770.0" y="102.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="770.0" dy="0">D2H</tspan></text><path d="M820,175 L720,175" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m56-4722-11)" /><text x="770.0" y="167.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="770.0" dy="0">H2D</tspan></text><text x="30" y="295" font-size="18" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="30" dy="0">B · PD：P 与 D 各有自己的状态，额外经过远端 Connector</tspan></text><rect x="30" y="335" width="290" height="195" rx="8" fill="#eef3ef" stroke="#236e77"/><text x="45" y="362" font-size="15" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="45" dy="0">P Engine</tspan></text><line x1="30" x2="320" y1="376" y2="376" stroke="#236e77" opacity=".4"/><text x="45" y="400" font-size="13" fill="#203f43" text-anchor="start" font-weight="400"><tspan x="45" dy="0">Prefill 计算</tspan><tspan x="45" dy="21">可有自己的 HiSparse Host 后备</tspan><tspan x="45" dy="21">不能把本地 Hot / Resident</tspan><tspan x="45" dy="21">当作 D 的设备缓存</tspan></text><rect x="420" y="335" width="300" height="195" rx="8" fill="#eef3ef" stroke="#236e77"/><text x="435" y="362" font-size="15" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="435" dy="0">跨引擎 KV Connector</tspan></text><line x1="420" x2="720" y1="376" y2="376" stroke="#236e77" opacity=".4"/><text x="435" y="400" font-size="13" fill="#203f43" text-anchor="start" font-weight="400"><tspan x="435" dy="0">按可传输组匹配与注册</tspan><tspan x="435" dy="21">Host / Device transfer descriptors</tspan><tspan x="435" dy="21">发送 / 接收完成通知</tspan><tspan x="435" dy="21">示例机制：Core NIXL</tspan></text><rect x="820" y="335" width="320" height="195" rx="8" fill="#eef3ef" stroke="#236e77"/><text x="835" y="362" font-size="15" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="835" dy="0">D Engine</tspan></text><line x1="820" x2="1140" y1="376" y2="376" stroke="#236e77" opacity=".4"/><text x="835" y="400" font-size="13" fill="#203f43" text-anchor="start" font-weight="400"><tspan x="835" dy="0">分配本地 Source / Indexer</tspan><tspan x="835" dy="21">确认外部 load 完成</tspan><tspan x="835" dy="21">建立本地 HiSparse 状态</tspan><tspan x="835" dy="21">Decode 用本地 Hot / Resident</tspan></text><path d="M320,430 L420,430" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m56-4722-11)" /><text x="370.0" y="422.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="370.0" dy="0">KV 交付</tspan></text><path d="M720,430 L820,430" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m56-4722-11)" /><text x="770.0" y="422.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="770.0" dy="0">本地目标地址</tspan></text></svg></div><p class="caption">B 是 Core 源码中可见的组合机制与职责图，不是当前 Ascend PCP 补丁已支持的 PD 部署图。 · 箭头表示标注的调用或数据关系，非未标明的继承关系。版本：Core 24420b7a / Ascend 14a31903。</p></figure><div class="table-scroll"><table><thead><tr><th>维度</th><th>混部</th><th>PD 分离</th></tr></thead><tbody><tr><td>请求与页状态</td><td>同一引擎连续维护。</td><td>P / D 各自维护；通过传输协议交付可复用 KV。</td></tr><tr><td>Host Source 的身份</td><td>本地卸载池。</td><td>D 端必须有自己的目标页；不能只拿到 P 的本地页号。</td></tr><tr><td>Indexer KV</td><td>本地计算 / 保留。</td><td>稀疏模型后续 Decode 还需要对应 Indexer 历史，不只是主 KV。</td></tr><tr><td>Resident / Hot</td><td>在本地分配与淘汰。</td><td>layout 标记为不参与交付；D 自己建立这些临时副本。</td></tr><tr><td>“完成”的含义</td><td>本地写回完成足以支撑本地 Host 后备。</td><td>还要证明远端 load 完成、D 的对应组已填好，之后才能建立有效历史。</td></tr><tr><td>PCP 的位置</td><td>一个引擎内部 query / KV 的并行布局。</td><td>P、D 各自可有不同并行配置，外部 connector 还要解决布局与组兼容；当前补丁没有接通。</td></tr></tbody></table></div><details class="evidence"><summary>源码依据 · 哪些组参与交付，以及外部 Host import 的入口</summary><div class="source"><p><a href="https://github.com/vllm-project/vllm/blob/24420b7a341af37a9bc3186e6fc6062512e0aa58/vllm/v1/hisparse/layout.py#L178-L200" target="_blank" rel="noopener">vllm/v1/hisparse/layout.py · L178–200 ↗</a><small>vllm @24420b7a341a · 真实源码，已裁剪，保留原行号</small></p><pre><code> 178          resident_groups.append(
+ 179              KVCacheGroupSpec(
+ 180                  [
+ 181                      name[: -len(HISPARSE_HOT_SUFFIX)] + HISPARSE_RESIDENT_SUFFIX
+ 182                      for name in names
+ 183                  ],
+ 184                  HiSparseResidentSpec(
+ 185                      block_size=gpu_block_size,
+ 186                      page_size=page_size,
+ 187                  ),
+ 188                  enable_kv_transfer=False,
+ 189              )
+ 190          )
+ 191          hot_groups.append(
+ 192              KVCacheGroupSpec(
+ 193                  names,
+ 194                  HiSparseHotSpec(
+ 195                      block_size=gpu_block_size,
+ 196                      page_size=page_size,
+ 197                      blocks_per_request=hot_blocks_per_request,
+ 198                  ),
+ 199                  enable_kv_transfer=False,
+ 200              )</code></pre></div><div class="source"><p><a href="https://github.com/vllm-project/vllm/blob/24420b7a341af37a9bc3186e6fc6062512e0aa58/vllm/v1/hisparse/layout.py#L220-L226" target="_blank" rel="noopener">vllm/v1/hisparse/layout.py · L220–226 ↗</a><small>vllm @24420b7a341a · 真实源码，已裁剪，保留原行号</small></p><pre><code> 220      source_group = KVCacheGroupSpec(
+ 221          list(source_specs),
+ 222          source_group_spec,
+ 223          role=KVCacheGroupRole.HISPARSE_SOURCE,
+ 224          host_resident=True,
+ 225          enable_kv_transfer=True,
+ 226      )</code></pre></div><div class="source"><p><a href="https://github.com/vllm-project/vllm/blob/24420b7a341af37a9bc3186e6fc6062512e0aa58/vllm/v1/hisparse/coordinator.py#L539-L565" target="_blank" rel="noopener">vllm/v1/hisparse/coordinator.py · L539–565 ↗</a><small>vllm @24420b7a341a · 真实源码，已裁剪，保留原行号</small></p><pre><code> 539      def record_pending_host_import(self, request_id: str, num_tokens: int) -&gt; None:
+ 540          &quot;&quot;&quot;Note a prefix an external load is populating in host pages.&quot;&quot;&quot;
+ 541          self._resident_requests.discard(request_id)
+ 542          self._pending_imports[request_id] = num_tokens
+ 543  
+ 544      def finish_host_import(self, request_id: str, *, failed: bool) -&gt; None:
+ 545          num_tokens = self._pending_imports.pop(request_id, None)
+ 546          if num_tokens is not None and not failed:
+ 547              self.complete_host_import(request_id, num_tokens)
+ 548  
+ 549      def complete_host_import(self, request_id: str, num_computed_tokens: int) -&gt; None:
+ 550          &quot;&quot;&quot;Publish externally populated host pages after connector completion.&quot;&quot;&quot;
+ 551          if not self.resident_managers:
+ 552              return
+ 553          block_size = self.resident_managers[0].block_size
+ 554          num_pages = num_computed_tokens // block_size
+ 555          state = self._get_request_state(request_id)
+ 556          state.valid_pages = set(range(num_pages))
+ 557          state.ready_prefix_pages = num_pages
+ 558          if num_computed_tokens:
+ 559              self._plan_page_transfer(
+ 560                  request_id,
+ 561                  (num_computed_tokens - 1) // block_size,
+ 562                  after_forward=False,
+ 563                  restore=True,
+ 564              )
+ 565          self._publish_host_blocks_if_ready(request_id)</code></pre></div><div class="source"><p><a href="https://github.com/vllm-project/vllm/blob/24420b7a341af37a9bc3186e6fc6062512e0aa58/vllm/distributed/kv_transfer/kv_connector/v1/hisparse/connector.py#L202-L207" target="_blank" rel="noopener">vllm/distributed/kv_transfer/kv_connector/v1/hisparse/connector.py · L202–207 ↗</a><small>vllm @24420b7a341a · 真实源码，已裁剪，保留原行号</small></p><pre><code> 202      def update_connector_output(self, connector_output: KVConnectorOutput) -&gt; None:
+ 203          assert self.coordinator is not None
+ 204          for request_id in connector_output.finished_recving or ():
+ 205              self.coordinator.finish_host_import(
+ 206                  request_id, failed=request_id in connector_output.failed_recving
+ 207              )</code></pre></div></details></section><section class="chapter" id="support"><a class="toplink" href="#top">本篇目录 ↑</a><span class="num">03 / 05</span><h2>组合矩阵：把“设计接口”和“当前支持”分开</h2><p class="intro">P 端不开 HiSparse 是合理的部署目标，但它不是只在开关上少写一个参数：P 的输出布局仍要能交付给 D 的 Host Source 和 Indexer。</p><div class="table-scroll"><table><thead><tr><th>部署 / 组合</th><th>本地 KV 路径</th><th>固定版本的结论</th></tr></thead><tbody><tr><td>混部，PCP=1，HiSparse 开</td><td>Resident 写入；Host 后备；Decode Hot 换入。</td><td>Ascend 基础路径；CPU / NPU 验证记录需要按具体提交看，不能由设计图直接证明收益。</td></tr><tr><td>混部，PCP>1，HiSparse 开</td><td>本地 query 与 gathered KV writes 分开；Host 镜像全局写行。</td><td>本文 PCP 分支已实现 C8 + request-sharded target decode；非基础 PR 自带支持。</td></tr><tr><td>PD：P / D 都不开 HiSparse</td><td>常规 PD 传输。</td><td>不属于本文 HiSparse 适配证明范围；不能据此推导下一行自动可用。</td></tr><tr><td>PD：P 不开、D 开 HiSparse</td><td>需要把 P 主 KV 映射到 D Host Source，并交付 Indexer；D 建本地临时缓存。</td><td>Core 的 region / mixed memory 机制可用于分析；当前 Ascend PCP wrapper 未支持外部 connector 组合，不写成可运行方案。</td></tr><tr><td>PD：P / D 都开 HiSparse</td><td>可交付组是 Source / Indexer；Hot / Resident 留在各自本地。</td><td>Core 有 MultiConnector 与 Host import 接口；当前 Ascend PCP 分支未打通 / 未验。</td></tr><tr><td>PD + PCP + HiSparse</td><td>同引擎 PCP 行布局与跨引擎传输布局同时需要正确。</td><td>当前未支持；不能绕开 direct connector 检查就认定完成。</td></tr><tr><td>DCP + HiSparse</td><td>Decode context 另有切分语义。</td><td>当前 AscendHiSparseImpl 明确拒绝 DCP。</td></tr></tbody></table></div><div class="table-scroll"><table><thead><tr><th>当前 PCP 分支约束</th><th>代码位置 / 解释</th></tr></thead><tbody><tr><td>C8 原生几何</td><td>E4M3FN，NoPE512 / RoPE64，FP32 scales，tile 128；PCP 要求 request-sharded target decode。</td></tr><tr><td>直接 HiSparse connector</td><td>adapter 要求 runner wrapper 是 ActiveKVConnector，内部精确为 HiSparseConnector。</td></tr><tr><td>私有 Host 的重叠路径</td><td>HostMirrorConnector 的安装条件排除 shared_host_region；不把 CPU rank0 共享写机制当作当前 NPU 路径。</td></tr><tr><td>有限 graph / MTP 组合</td><td>实现含持久 buffer、draft 布局切换与 FULL 镜像逻辑；其他形态是否工作须单独验证，不能推及全部 graph / speculator。</td></tr></tbody></table></div><details class="evidence"><summary>源码依据 · 当前硬约束与 Host mirror 条件</summary><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/attention/sfa_hisparse.py#L179-L195" target="_blank" rel="noopener">vllm_ascend/attention/sfa_hisparse.py · L179–195 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code> 179      def __init__(self, *args, **kwargs):
+ 180          super().__init__(*args, **kwargs)
+ 181          if self.enable_sparse_sfa_turboquant:
+ 182              raise ValueError(&quot;Ascend HiSparse does not support TurboQuant&quot;)
+ 183          if self.enable_sparse_sfa_c8:
+ 184              if (
+ 185                  self.c8_cache_dtype != torch.float8_e4m3fn
+ 186                  or (self.kv_lora_rank, self.qk_rope_head_dim) != (512, 64)
+ 187                  or self.sfa_qsfa_tile_size != 128
+ 188              ):
+ 189                  raise ValueError(&quot;HiSparse C8 requires native E4M3FN NoPE512/RoPE64 with FP32 scales&quot;)
+ 190          parallel = self.vllm_config.parallel_config
+ 191          if parallel.decode_context_parallel_size &gt; 1:
+ 192              raise ValueError(&quot;Ascend HiSparse does not support DCP&quot;)
+ 193          if parallel.prefill_context_parallel_size &gt; 1:
+ 194              if not self.enable_sparse_sfa_c8 or not self.is_pcp_decode_sharded:
+ 195                  raise ValueError(&quot;HiSparse PCP requires C8 and request-sharded target decode&quot;)</code></pre></div><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/hisparse/pcp.py#L140-L148" target="_blank" rel="noopener">vllm_ascend/hisparse/pcp.py · L140–148 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code> 140      if type(connector) is not ActiveKVConnector or type(connector.kv_connector) is not HiSparseConnector:
+ 141          raise ValueError(&quot;HiSparse PCP requires the direct HiSparseConnector&quot;)
+ 142      install_pcp_cache_layout()
+ 143      prepare_pcp_mirror_staging(connector.kv_connector.connector_worker)
+ 144      (host_group_id,) = runner.kv_cache_config.host_group_ids
+ 145      adapted = PCPHiSparseConnector(connector, runner.pcp_manager, runner.block_tables, host_group_id)
+ 146      if runner.speculator is not None:
+ 147          runner.speculator.hisparse_pcp_connector = adapted
+ 148      return adapted</code></pre></div><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/hisparse/host_mirror.py#L247-L265" target="_blank" rel="noopener">vllm_ascend/hisparse/host_mirror.py · L247–265 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code> 247      connector = runner.kv_connector
+ 248      if (
+ 249          type(connector) not in (ActiveKVConnector, PCPHiSparseConnector)
+ 250          or type(connector.kv_connector) is not HiSparseConnector
+ 251      ):
+ 252          return connector
+ 253      worker = connector.kv_connector.connector_worker
+ 254      if (
+ 255          type(worker) is not HiSparseConnectorWorker
+ 256          or not worker._initialized
+ 257          or not isinstance(worker.backend, AscendHiSparseBackend)
+ 258          or worker.shared_host_region is not None
+ 259          or not worker.is_host_writer
+ 260          or worker.hot_backing.device.type != &quot;npu&quot;
+ 261      ):
+ 262          return connector
+ 263      sources = _DirectMirrorSources.bind(worker, runner.speculator)
+ 264      if sources is None:
+ 265          return connector</code></pre></div></details></section><section class="chapter" id="walk"><a class="toplink" href="#top">本篇目录 ↑</a><span class="num">03 / 06</span><h2>怎么走读源码：按一条请求的因果关系读</h2><p class="intro">先理解谁拥有状态，再看谁执行搬运。不要从一个算子入口倒推整个生命周期。下面的文件名同时对应本页折叠源码里的固定提交链接。</p><ol class="steps"><li><strong>layout.py → single_type_kv_cache_manager.py：</strong>先画出四组及两个池，确认哪些组参与远端传输；理解 Hot 是按请求预留工作集，不是全量历史。</li><li><strong>coordinator.py：</strong>按 advance_scheduled → plan_prefix_materialization → update_residency → _unpin_page → _on_block_reused → update_spills 阅读。跟踪一个 page 的 valid / pending / pinned 变化。</li><li><strong>connector.py → gpu/kv_connector.py：</strong>看 Scheduler 如何生成 metadata，Worker 如何在 pre_forward 启动；记住 has_sync_kv_loads 的目的。</li><li><strong>binding.py → worker.py：</strong>把 Resident / Hot 共享 view 与 Source table 对上，再沿 start_step → prepare_forward → mirror → finish_forward → completion 走。</li><li><strong>runtime.py：</strong>看 CacheHandle.write_target 与 Runtime.swap_in；区分 request state index、Source row、Hot slot 和 attention physical index。</li><li><strong>sfa_hisparse.py → cache_ops.py → resolver kernel：</strong>跟踪 logical TopK 的三路分支，找到 gather 与 SFA 之间的 ready_event，确认当前层实际等待点。</li><li><strong>pcp.py → patch_hisparse.py：</strong>为同一步分别列 query rows、gathered write rows、mirror target rows；再读 target / draft 的切换和捕获前绑定。</li><li><strong>multi_connector.py → nixl/pull_worker.py → complete_host_import：</strong>最后再读 PD，单独检查远端可传输组、owner、完成通知与 D 端恢复，不把它混入本地 H2D。</li></ol><div class="takeaway"><strong>用五个问题检验自己是否读懂：</strong>① Host 已分配时为什么还不能丢 Resident？② unpin 后为什么还能命中，但复用后不能？③ 一个 TopK miss 到底在哪个 stream 完成、谁在等它？④ PCP rank 本地没有 Prefill 时为什么仍可能要镜像 Prefill 写行？⑤ D 收到远端前缀后，为什么不能把 P 的 Resident / Hot 表直接拿来用？</div></section><section class="chapter" id="summary"><a class="toplink" href="#top">本篇目录 ↑</a><span class="num">03 / 07</span><h2>把整体收回来：本地分层缓存是主体，PCP 和 PD 改不同边界</h2><p class="intro">这套设计复杂的地方，在数据生命周期与地址空间的一致性，而不只是多写几个 kernel。</p><div class="table-scroll"><table><thead><tr><th>一层层看</th><th>最终记住的设计责任</th></tr></thead><tbody><tr><td>HiSparse 本体</td><td>Host 提供历史后备；Resident 保留可直接读的页；Hot 缓存缺失页中的稀疏 token。</td></tr><tr><td>Core 控制面</td><td>页分配、写回完成、驻留回收、前缀发布与释放，统一走 Coordinator / Managers / Connector。</td></tr><tr><td>Core / Ascend 数据面</td><td>TopK 解析 → 只搬 miss → 等本层 ready → Sparse Attention；NPU backend 承接平台操作。</td></tr><tr><td>PCP 适配</td><td>保留规范请求的控制面；把本地 query state 与全局 gathered KV / mirror writes 拆开；图与 MTP 也沿这个区分。</td></tr><tr><td>PD 适配</td><td>在本地机制外增加跨引擎组映射与交付完成；D 重新建立本地 HiSparse 状态。当前 Ascend PCP 分支还未覆盖。</td></tr></tbody></table></div><h3>版本与证据范围</h3><div class="table-scroll"><table><thead><tr><th>项目</th><th>固定对象 / 说明</th></tr></thead><tbody><tr><td>Core</td><td><code>24420b7a341af37a9bc3186e6fc6062512e0aa58</code>；本文所有 Core 源码片段均用 git show 此提交读取，不使用本地当前 HEAD 偷换。</td></tr><tr><td>Ascend PCP</td><td><code>14a31903a98f2b913c8fbe2bcb02d37a544889ba</code>；基础 <code>66748c3c4ab730509e8104a201767a2add4a6f5d</code> 之上的分支设计。</td></tr><tr><td>基础 PR</td><td><a href="https://github.com/vllm-project/vllm-ascend/pull/20926">#20926</a>；其更新不自动等于本文分支已 rebase。</td></tr><tr><td>PCP 对比 PR</td><td><a href="https://github.com/vllm-project/vllm-ascend/pull/21892">官仓 #21892</a> / <a href="https://github.com/zyz111222/vllm-ascend/pull/1">个人 fork #1</a>。本文只更新设计导读，不修改 PR。</td></tr><tr><td>验证口径</td><td>本文是固定源码核对。未新增设备测试、PD 功能通过或吞吐收益声明；性能结论需对应版本、配置和原始测量。</td></tr><tr><td>图的性质</td><td>依据固定源码重绘的类关系、状态解释与时序；为可读性裁剪。教学例子明确标注，不冒充现场数据。</td></tr></tbody></table></div><p>所有关键路径下方都内嵌了裁剪源码和 GitHub 固定版本链接。先看正文和图建立因果关系，再展开源码核对字段与调用。</p></section><nav class="page-turn" aria-label="篇章顺序"><a href="pcp.html"><small>← 上一站</small>PCP 原生设计</a><a class="next" href="index.html"><small>下一站 →</small>回到目录</a></nav><footer>Core <code>24420b7a341af37a9bc3186e6fc6062512e0aa58</code><br>Ascend PCP <code>14a31903a98f2b913c8fbe2bcb02d37a544889ba</code><br>依据固定源码重绘并裁剪；不代表最新 main 或现场性能结论。已做离线结构、链接与交互检查；未做截图视觉校验。<br>源码版权与许可证见各原仓库。</footer></main></div><script>
+const toggle=document.getElementById('toggle-evidence');
+if(toggle)toggle.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expanded')!=='true';document.querySelectorAll('details.evidence').forEach(x=>x.open=open);toggle.setAttribute('aria-expanded',String(open));toggle.textContent=open?'折叠全部源码':'展开全部源码';});
+document.getElementById('print-page')?.addEventListener('click',()=>window.print());
+document.querySelectorAll('.diagram-full').forEach(b=>b.addEventListener('click',async()=>{if(document.fullscreenElement){await document.exitFullscreen();return;}await b.closest('figure').requestFullscreen();}));
+const links=[...document.querySelectorAll('.toc a')];
+const observer=new IntersectionObserver(entries=>{for(const e of entries)if(e.isIntersecting)links.forEach(a=>a.classList.toggle('active',a.hash==='#'+e.target.id));},{rootMargin:'-5% 0px -80% 0px'});
+document.querySelectorAll('.chapter').forEach(s=>observer.observe(s));
+window.addEventListener('scroll',()=>{const total=document.documentElement.scrollHeight-innerHeight;document.getElementById('progress').style.width=(total>0?scrollY/total*100:0)+'%';},{passive:true});
+</script></body></html>

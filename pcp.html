@@ -1,0 +1,677 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="PCP 原生设计：依据固定版本源码的中文设计走读，含类图、时序图与裁剪源码。"><title>PCP 原生设计｜HiSparse / PCP 设计笔记</title><style>
+:root{--bg:#f5f2e9;--paper:#fffef9;--ink:#173c40;--text:#304347;--muted:#687976;--accent:#236e77;--line:#cfd9d3;--warm:#a56b28;--wash:#e9eeea}*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.85 "Microsoft YaHei","PingFang SC",sans-serif}a{color:var(--accent);text-underline-offset:4px}a:hover{color:var(--warm)}button,summary,a{touch-action:manipulation}a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--warm);outline-offset:3px}h1,h2,h3{color:var(--ink);line-height:1.4}h1{font:700 clamp(38px,4.3vw,65px)/1.2 "SimSun","Songti SC",serif;letter-spacing:-1px;margin:20px 0}h2{font-size:28px;margin:0 0 14px}h3{font-size:19px;margin:26px 0 10px}p{margin:0 0 17px}strong{color:var(--ink)}code,.mono{font-family:Consolas,"Cascadia Mono",monospace;font-size:.88em;overflow-wrap:anywhere}.layout{display:grid;grid-template-columns:235px minmax(0,1fr);gap:42px;max-width:1550px;padding:45px 38px 70px;margin:auto}.layout>main{min-width:0}.rail{position:sticky;top:25px;align-self:start;max-height:calc(100vh - 50px);overflow:auto;padding-right:12px}.brand{font:12px/1.7 Consolas,monospace;letter-spacing:2px;color:var(--accent);border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:16px}nav a{display:block;padding:5px 0;text-decoration:none;font-size:12px;line-height:1.6;border-bottom:1px solid var(--line)}nav a.active{font-weight:700;color:var(--ink);border-left:3px solid var(--accent);padding-left:8px}nav b{font:11px Consolas,monospace;color:var(--muted);display:inline-block;min-width:25px}.tools{display:flex;flex-wrap:wrap;gap:8px;margin:17px 0}button{font:12px/1.5 "Microsoft YaHei",sans-serif;padding:6px 10px;background:var(--paper);color:var(--accent);border:1px solid var(--line);border-radius:3px;cursor:pointer}.eyebrow,.num{font:12px/1.6 Consolas,monospace;letter-spacing:2px;color:var(--accent)}.lede{font-size:20px;max-width:900px}.meta{font-size:13px;border-block:1px solid var(--line);padding:14px 0;margin:22px 0}.meta p{margin:3px 0}.pill{display:inline-block;border:1px solid var(--accent);padding:2px 9px;color:var(--accent);font-size:12px;margin:0 6px 5px 0}.chapter{padding:42px 0 24px;border-bottom:1px solid var(--line)}.num{display:block;margin-bottom:10px}.intro{font-size:18px;color:var(--muted);margin-bottom:24px}.takeaway{border-left:4px solid var(--accent);background:var(--wash);padding:18px 22px;margin:24px 0}.note{font-size:14px;background:#f2e9d9;border-left:3px solid var(--warm);padding:15px 20px;margin:23px 0}.table-scroll{overflow:auto;margin:22px 0;border:1px solid var(--line);border-radius:4px}table{border-collapse:collapse;width:100%;font-size:14px;background:var(--paper);min-width:660px}th{background:var(--wash);color:var(--ink);text-align:left;font-weight:600}td,th{border-bottom:1px solid var(--line);padding:13px 15px;vertical-align:top}tr:last-child td{border-bottom:0}td:first-child{min-width:115px}td{overflow-wrap:anywhere}th:first-child{width:18%}.steps{padding-left:24px}.steps li{padding:0 0 14px 8px}.diagram{margin:27px 0;border:1px solid var(--line);background:var(--paper);border-radius:7px;overflow:hidden}.diagram figcaption{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:13px 17px;background:var(--wash);font-size:15px}.diagram-scroll{overflow:auto;padding:12px 8px;max-height:850px}.diagram svg{display:block;max-width:100%;height:auto;min-width:850px;font-family:"Microsoft YaHei",sans-serif}.diagram .caption{font-size:12px;color:var(--muted);border-top:1px solid var(--line);margin:0;padding:12px 16px;line-height:1.7}.diagram:fullscreen{overflow:auto;background:var(--paper);padding:12px}.diagram:fullscreen .diagram-scroll{max-height:none}.diagram:fullscreen svg{max-width:none;width:auto;min-width:100%}.evidence{margin:22px 0;border:1px solid var(--line);background:#edf0e9;border-radius:4px;font-size:13px}summary{cursor:pointer;padding:12px 15px;color:var(--accent);font-weight:600}details[open]>summary{border-bottom:1px solid var(--line)}.source{padding:12px 15px 0}.source p{margin-bottom:8px;line-height:1.6}.source a{overflow-wrap:anywhere}.source small{display:block;color:var(--muted);font-size:11px;margin-top:3px}.source pre{margin:0 0 15px;padding:15px;background:var(--paper);border:1px solid var(--line);overflow:auto;line-height:1.65;max-height:590px}.source pre code{font-size:12px;white-space:pre;overflow-wrap:normal}.rail small{font-size:11px;color:var(--muted)}footer{padding-top:25px;font-size:12px;color:var(--muted)}.toplink{font-size:12px;float:right}#progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);z-index:20;width:0}
+@media(max-width:1050px){.layout{grid-template-columns:minmax(0,1fr);padding:26px 22px 55px;gap:16px}.rail{position:static;max-height:none;padding:0}.brand{padding-bottom:10px}.rail nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px 18px}.rail small{display:none}.diagram svg{max-width:none;width:100%;min-width:900px}}
+@media(max-width:600px){.layout{padding:22px 16px 45px}.rail nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 12px}.lede{font-size:18px}.intro{font-size:16px}h2{font-size:25px}.chapter{padding:32px 0 18px}.takeaway,.note{padding:15px 16px}.source{padding:10px 9px 0}.diagram figcaption{font-size:13px;padding:10px}.diagram-full{white-space:nowrap}.meta{font-size:12px}.diagram-scroll{max-height:700px}td,th{padding:10px 12px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{.layout{display:block;padding:0}.rail,#progress,.diagram-full,.toplink{display:none}body{background:white;font-size:11px}.diagram{break-inside:avoid}.diagram-scroll{overflow:visible;max-height:none}.diagram svg{min-width:0;max-width:100%}.evidence:not([open]){display:none}.source pre{max-height:none;white-space:pre-wrap}.chapter{padding:20px 0}.table-scroll{overflow:visible}table{min-width:0;font-size:10px}}
+
+.rail .site-nav{display:block;border-bottom:1px solid var(--line);margin-bottom:16px;padding-bottom:14px}.site-nav a{padding:8px 10px;display:block;border-left:2px solid transparent;font-size:13px}.site-nav a[aria-current=page]{background:var(--wash);border-color:var(--accent);font-weight:700}.rail .toc a{display:block}.rail .toc b{margin-right:8px}.topic{font-size:12px;letter-spacing:.08em;color:var(--accent);margin:15px 0 7px}.page-turn{display:flex;justify-content:space-between;gap:18px;padding:30px 0}.page-turn a{flex:1;padding:16px 20px;border:1px solid var(--line);border-radius:5px;background:var(--paper);text-decoration:none}.page-turn small{display:block;color:var(--muted);font-size:12px}.page-turn .next{text-align:right}.example{white-space:pre;overflow:auto;padding:18px;background:var(--wash);font-size:13px;line-height:1.8;border-left:3px solid var(--accent)}.cards{display:grid;gap:20px;margin-top:30px}.card{display:block;border:1px solid var(--line);border-radius:8px;padding:25px 28px;text-decoration:none;background:var(--paper);color:var(--ink)}.card:hover{border-color:var(--accent)}.card h2{margin:8px 0 12px;font-size:28px}.card p{color:var(--muted);margin:0 0 16px}.card .enter{color:var(--accent);font-weight:600}.card-top{display:flex;justify-content:space-between;gap:20px;font-size:12px;letter-spacing:.08em;color:var(--accent)}.path{padding:20px 0;color:var(--accent);font-size:15px}.evidence summary{list-style-position:inside}
+@media(max-width:1050px){.rail .site-nav{display:flex;flex-wrap:wrap;gap:3px}.rail .toc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.rail .site-nav a{flex:1;min-width:120px}.rail .topic{margin-top:9px}}
+@media(max-width:600px){.rail .toc{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:22px 18px}.card h2{font-size:25px}.page-turn a{padding:14px 12px}.card-top{letter-spacing:0}.example{font-size:12px}}
+@media print{.page-turn{display:none}}
+</style></head><body><div id="progress" aria-hidden="true"></div><div class="layout" id="top"><aside class="rail"><div class="brand">SOURCE-VERIFIED DESIGN<br>HISPARSE / ASCEND / PCP</div><nav class="site-nav" aria-label="主题导航"><a href="index.html">目录首页</a><a href="hisparse.html">01 HiSparse 总览与详细机制</a><a href="pcp.html" aria-current="page">02 PCP 原生设计</a><a href="hisparse-pcp.html">03 HiSparse + PCP 组合设计</a></nav><div class="topic">本篇章节</div><nav class="toc" aria-label="本篇章节"><a href="#pcp-overview"><b>01</b>先把 PCP 单独看清楚</a><a href="#partition"><b>02</b>Prefill 怎么切，Decode 怎么分</a><a href="#coordinates"><b>03</b>三个坐标</a><a href="#pcp-lifecycle"><b>04</b>一轮执行</a><a href="#kv-exchange"><b>05</b>不开 HiSparse 时，Ascend SFA 如何交换 KV</a><a href="#pcp-graph"><b>06</b>Graph 与 MTP</a><a href="#pcp-deployment"><b>07</b>混部与 PD 分离</a><a href="#pcp-recap"><b>08</b>带着这四个契约进入组合篇</a></nav><div class="tools"><button id="toggle-evidence" type="button" aria-expanded="false">展开全部源码</button><button id="print-page" type="button">打印 / PDF</button></div><small>固定提交走读 · 2026-11-15<br>图可横向滚动或放大；源码默认折叠。<br>三篇独立阅读，页面保存在同目录即可离线浏览。</small></aside><main><header><span class="eyebrow">PART 02 / PCP 原生设计</span><h1>先把并行的三个坐标对齐。</h1><p class="lede">关闭 HiSparse，理解 Prefill 切分、Decode 分工、KV 交换、hidden 恢复，以及混部与 PD 的职责边界。</p><div><span class="pill">8 章</span><span class="pill">1 张内嵌图</span><span class="pill">固定源码 · 分层走读</span></div><div class="meta">阅读顺序：<a href="hisparse.html">HiSparse</a> → <a href="pcp.html">PCP</a> → <a href="hisparse-pcp.html">HiSparse + PCP</a>。<br>本篇基于 Core 24420b7a / Ascend 14a31903；详细 SHA 与证据随页保留。</div></header><section class="chapter" id="pcp-overview"><a class="toplink" href="#top">本篇目录 ↑</a><span class="num">02 / 01</span><h2>先把 PCP 单独看清楚</h2><p class="intro">本篇先不启用 HiSparse，只解释固定版本的 PCP 管理器与 Ascend SFA 数据路径。读懂这里的三种行顺序，下一篇的组合适配才有基础。</p><div class="takeaway"><strong>PCP 的任务：</strong>把同一引擎本步的 query 工作拆给多个 rank，组织新 KV 的交换与正确落位，最后把 hidden states 恢复为全局请求顺序。它本身不建立 Host / Resident / Hot 分层缓存。</div><div class="table-scroll"><table><thead><tr><th>对象</th><th>职责</th><th>与下一篇的关系</th></tr></thead><tbody><tr><td>Core PCPManager</td><td>建立全局 batch → rank-local batch 的切分和恢复映射。</td><td>组合适配继续使用这些映射，不能重建另一套请求编号。</td></tr><tr><td>AscendPCPManager : PCPManager</td><td>承接 Ascend CPU 长度视图、attention 状态、graph padding 和 draft 布局。</td><td>向 attention / HiSparse 提供同一份 AscendPCPAttentionContext。</td></tr><tr><td>Ascend SFA backend</td><td>按 PCP 策略交换本步新 KV，再按 gathered slots 写入缓存。</td><td>组合适配还要把正确写行镜像到 Host，不能只看本 rank 的 query。</td></tr><tr><td>restore_for_sampling</td><td>汇集并恢复全局 hidden states，交给采样或 draft。</td><td>HiSparse 的局部 query 布局不能泄漏成全局采样顺序。</td></tr></tbody></table></div><aside class="note">这里的“原生 PCP”指在同一固定源码版本上关闭 HiSparse 后走的 PCP 路径；不是拿最新 main 代替本文版本。PCP 与 DCP 是不同维度，本篇以 PCP > 1、DCP = 1 为主要叙述范围。</aside><details class="evidence"><summary>源码依据 · 继承关系与上下文字段</summary><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/worker/v2/pcp_manager.py#L36-L95" target="_blank" rel="noopener">vllm_ascend/worker/v2/pcp_manager.py · L36–95 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code>  36  from vllm.v1.worker.gpu.pcp_manager import PCPManager
+  37  from vllm.v1.worker.gpu.states import RequestState
+  38  from vllm.v1.worker.utils import AttentionGroup
+  39  
+  40  from vllm_ascend.attention.context_parallel.common_cp import is_pcp_decode_sharding_enabled
+  41  from vllm_ascend.ops.rotary_embedding import update_cos_sin
+  42  from vllm_ascend.worker.v2.attn_utils import build_attn_state
+  43  from vllm_ascend.worker.v2.input_batch import AscendInputBatch, AscendInputBuffers
+  44  
+  45  if TYPE_CHECKING:
+  46      from vllm.v1.worker.gpu.spec_decode.speculator import DraftModelSpeculator
+  47  
+  48  
+  49  @dataclass(frozen=True)
+  50  class AscendPCPAttentionContext:
+  51      &quot;&quot;&quot;Canonical global PCP view for one attention step.&quot;&quot;&quot;
+  52  
+  53      # The global batch and its associated metadata, used to build DSA attention metadata.
+  54      global_batch: AscendInputBatch
+  55      global_block_tables: tuple[torch.Tensor, ...]
+  56      global_slot_mappings: torch.Tensor
+  57      hidden_restore_idx: torch.Tensor
+  58      padded_gather_idx: torch.Tensor | None = None
+  59      gathered_kv_write_mask: torch.Tensor | None = None
+  60      # Device snapshot of allocated kernel-block counts in global request order.
+  61      global_block_table_num_blocks: torch.Tensor | None = None
+  62      # Original batch row for each local request, in upstream segment order.
+  63      local_to_global_req_indices: tuple[int, ...] | None = None
+  64      # Actual local tokens in the unpartitioned batch, excluding padding.
+  65      local_token_indices: torch.Tensor | None = None
+  66      # Padded tensor width consumed by each rank&#x27;s model forward.
+  67      local_num_tokens: int | None = None
+  68      # Local request order, including dual-chunk duplicates and graph padding.
+  69      local_request_state_indices: torch.Tensor | None = None
+  70  
+  71  
+  72  class AscendPCPManager(PCPManager):
+  73      &quot;&quot;&quot;PCP manager that refreshes Ascend-only local-batch metadata.&quot;&quot;&quot;
+  74  
+  75      vllm_config: VllmConfig
+  76      kv_cache_config: KVCacheConfig | None = None
+  77      _hidden_restore_idx: torch.Tensor | None
+  78      _global_batch_slot_mappings: torch.Tensor | None
+  79      _gathered_kv_slot_mappings: torch.Tensor | None
+  80      _pad_slot_id: torch.Tensor
+  81      # The runner&#x27;s global input buffers, which back global graph metadata.
+  82      global_input_buffers: AscendInputBuffers | None = None
+  83      # Draft-only attention layers; metadata built only for them runs replicated.
+  84      _draft_layer_names: frozenset[str] = frozenset()
+  85      # Whether the speculator shards draft prefill with the target, i.e. the
+  86      # draft runs with the target&#x27;s PCP topology (upstream MTP/Eagle3) rather
+  87      # than replicated with PCP=1 (upstream DFlash/DSpark).
+  88      _is_draft_prefill_sharded: bool = False
+  89      # The batch restore_for_sampling handed to sampling and the speculator.
+  90      _sampling_global_batch: InputBatch | None = None
+  91      # Draft input buffers and row count overwritten by staged rank-local
+  92      # draft prefill inputs; the rows are stashed in the _draft_*_stash buffers.
+  93      _staged_draft_inputs: tuple[InputBuffers, int] | None = None
+  94  
+  95      def __init__(</code></pre></div></details></section><section class="chapter" id="partition"><a class="toplink" href="#top">本篇目录 ↑</a><span class="num">02 / 02</span><h2>Prefill 怎么切，Decode 怎么分</h2><p class="intro">不能只记住“PCP 切 Prefill”。固定版本里也存在按请求分片的 Decode 策略，具体是否启用由模型与并行配置决定。</p><h3>Prefill：首尾配对的 DualChunkSwap</h3><ol class="steps"><li>对一条需要分片的 query，取 <code>2 × PCP world size</code> 个 chunk；chunk 长度向上取整。</li><li>rank r 取第 r 块和倒数第 r 块。PCP=2 时，rank0 取 chunk0 / chunk3，rank1 取 chunk1 / chunk2。</li><li>首尾配对是分工方式；rank 的实际本地 batch 还会组合多请求，并为 collective / graph 补齐。不能把本地行号当原请求 token 位置。</li></ol><h3>Decode：复制执行与按请求分片分开理解</h3><div class="table-scroll"><table><thead><tr><th>模式</th><th>计算归属</th><th>新 KV 的处理</th></tr></thead><tbody><tr><td>replicated decode</td><td>各 PCP rank 看到相同 Decode query。</td><td>重复行只保留规范写者；没有其他分片工作时无需重复交换相同 KV。</td></tr><tr><td>request-sharded decode</td><td>本步 Decode 请求按 ordinal % PCP world size 分给 owner rank。</td><td>owner 计算的新 KV 要交换；hidden states 随后也恢复全局顺序。owner 无需跨 step 固定。</td></tr><tr><td>Ascend 策略</td><td>非 KPool 模型，PCP > 1 且 DCP = 1 时启用 decode sharding；KPool 分支返回 False。</td><td>模型例外以 common_cp.py 为准，不能仅凭模型名称或 PCP 数值判断。</td></tr></tbody></table></div><aside class="note">Core 的固定提交已经包含 shard_decode_requests 分支。Ascend 文件中的上游 TODO 注释不能作为“上游完全没有 decode sharding”的证据；这里按实际函数体核对。</aside><details class="evidence"><summary>源码依据 · Core chunk / owner 与 Ascend 策略</summary><div class="source"><p><a href="https://github.com/vllm-project/vllm/blob/24420b7a341af37a9bc3186e6fc6062512e0aa58/vllm/v1/worker/gpu/pcp_manager.py#L257-L317" target="_blank" rel="noopener">vllm/v1/worker/gpu/pcp_manager.py · L257–317 ↗</a><small>vllm @24420b7a341a · 真实源码，已裁剪，保留原行号</small></p><pre><code> 257      def replicated_requests(
+ 258          self, num_scheduled_tokens: np.ndarray, is_prefilling: np.ndarray
+ 259      ) -&gt; np.ndarray:
+ 260          &quot;&quot;&quot;Per global request, whether every PCP rank gets the whole query.&quot;&quot;&quot;
+ 261          num_chunks = 2 * self.pcp_world_size
+ 262          query_lens = np.asarray(num_scheduled_tokens, dtype=np.int64)
+ 263          replicated = ~np.asarray(is_prefilling, dtype=np.bool_)
+ 264          if self.dcp_world_size &gt; 1:
+ 265              chunk_sizes = (query_lens + num_chunks - 1) // num_chunks
+ 266              drops_a_chunk = (num_chunks - 1) * chunk_sizes &gt;= query_lens
+ 267              replicated |= drops_a_chunk
+ 268          return replicated
+ 269  
+ 270      def _iter_rank_chunks(
+ 271          self,
+ 272          rank: int,
+ 273          num_scheduled_tokens: np.ndarray,
+ 274          is_prefilling: np.ndarray,
+ 275      ) -&gt; Iterator[tuple[int, int, int]]:
+ 276          &quot;&quot;&quot;Yield ``(request index, query offset, length)`` for one PCP rank.
+ 277  
+ 278          PCP=4 partitions each prefill into eight chunks:
+ 279  
+ 280              full:  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+ 281              rank 0:  0                           7
+ 282              rank 1:      1                   6
+ 283              rank 2:          2           5
+ 284              rank 3:              3   4
+ 285  
+ 286          Decodes, and prefills too short to fill all eight, are replicated instead.
+ 287          &quot;&quot;&quot;
+ 288          decode_ordinal = 0
+ 289          num_chunks = 2 * self.pcp_world_size
+ 290          replicated = self.replicated_requests(num_scheduled_tokens, is_prefilling)
+ 291          for global_batch_req_idx, num_tokens in enumerate(num_scheduled_tokens):
+ 292              query_len = int(num_tokens)
+ 293              if query_len == 0:
+ 294                  continue
+ 295              chunk_indices: tuple[int, ...]
+ 296              if not replicated[global_batch_req_idx]:
+ 297                  chunk_size = (query_len + num_chunks - 1) // num_chunks
+ 298                  chunk_indices = (rank, num_chunks - 1 - rank)
+ 299              elif self.shard_decode_requests:
+ 300                  chunk_size = query_len
+ 301                  # KV and hidden states are gathered back to every PCP rank, so
+ 302                  # decode ownership does not need to persist across steps. Use a
+ 303                  # compact decode-only ordinal to keep each step exactly
+ 304                  # balanced even when prefills and zero-token rows are present.
+ 305                  owner_rank = decode_ordinal % self.pcp_world_size
+ 306                  decode_ordinal += 1
+ 307                  chunk_indices = (0,) if rank == owner_rank else ()
+ 308              else:  # DCP requires decode queries on every participating rank.
+ 309                  chunk_size = query_len
+ 310                  chunk_indices = (0,)
+ 311  
+ 312              for chunk_idx in chunk_indices:
+ 313                  chunk_offset = chunk_idx * chunk_size
+ 314                  chunk_len = min(chunk_size, query_len - chunk_offset)
+ 315                  if chunk_len &lt;= 0:
+ 316                      continue
+ 317                  yield global_batch_req_idx, chunk_offset, chunk_len</code></pre></div><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/attention/context_parallel/common_cp.py#L36-L58" target="_blank" rel="noopener">vllm_ascend/attention/context_parallel/common_cp.py · L36–58 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code>  36  def is_pcp_decode_sharding_enabled(vllm_config) -&gt; bool:
+  37      &quot;&quot;&quot;Shard PCP decode requests, including speculative target verification.
+  38  
+  39      The decision uses declared vLLM fields so cloning a draft
+  40      ``ParallelConfig`` with ``replace()`` remains supported. KPool models
+  41      keep replicated decodes so every PCP rank advances its head-sharded
+  42      Mamba state in the same request order.
+  43      &quot;&quot;&quot;
+  44      if model_uses_kpool_indexer(getattr(vllm_config, &quot;model_config&quot;, None)):
+  45          # TODO: Adapt PCP decode request sharding for GLM-5.3-Flash, including
+  46          # recurrent-state ownership and request ordering across PCP ranks.
+  47          return False
+  48      parallel_config = vllm_config.parallel_config
+  49      return parallel_config.prefill_context_parallel_size &gt; 1 and parallel_config.decode_context_parallel_size == 1
+  50  
+  51  
+  52  def get_pcp_num_replicated_tokens(num_decode_tokens: int, is_decode_sharded: bool) -&gt; int:
+  53      &quot;&quot;&quot;Return the leading rank-local tokens that every PCP rank computes identically.
+  54  
+  55      Replicated decodes need no KV gather. A sharded decode belongs to one PCP
+  56      rank, so its KV is gathered together with the prefill tokens.
+  57      &quot;&quot;&quot;
+  58      return 0 if is_decode_sharded else num_decode_tokens</code></pre></div><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/worker/v2/pcp_manager.py#L181-L235" target="_blank" rel="noopener">vllm_ascend/worker/v2/pcp_manager.py · L181–235 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code> 181      def bind_config(self, vllm_config: VllmConfig) -&gt; None:
+ 182          self.vllm_config = vllm_config
+ 183          self.shard_decode_requests: bool = self.shard_decode_requests and self.is_decode_sharded
+ 184  
+ 185      @property
+ 186      def is_decode_sharded(self) -&gt; bool:
+ 187          &quot;&quot;&quot;Use the shared policy after the runner injects vllm_config.&quot;&quot;&quot;
+ 188          return is_pcp_decode_sharding_enabled(self.vllm_config)
+ 189  
+ 190      # TODO: Remove replicated_requests and _iter_rank_chunks once the paired
+ 191      # vLLM includes #52162, which shards decode requests upstream.
+ 192      def replicated_requests(self, num_scheduled_tokens: np.ndarray, is_prefilling: np.ndarray) -&gt; np.ndarray:
+ 193          &quot;&quot;&quot;Sharded decodes have a single owner, so none of them is replicated.&quot;&quot;&quot;
+ 194          replicated = super().replicated_requests(num_scheduled_tokens, is_prefilling)
+ 195          if self.is_decode_sharded:
+ 196              replicated &amp;= np.asarray(is_prefilling, dtype=np.bool_)
+ 197          return replicated
+ 198  
+ 199      def _iter_rank_chunks(
+ 200          self,
+ 201          rank: int,
+ 202          num_scheduled_tokens: np.ndarray,
+ 203          is_prefilling: np.ndarray,
+ 204      ) -&gt; Iterator[tuple[int, int, int]]:
+ 205          &quot;&quot;&quot;Split prefills as upstream does and assign decodes round-robin.
+ 206  
+ 207          Only scheduled decodes count toward the round-robin order, which keeps
+ 208          every step balanced. Ownership may change between steps because KV
+ 209          and hidden states are gathered back to every PCP rank.
+ 210          &quot;&quot;&quot;
+ 211          if not self.is_decode_sharded:
+ 212              yield from super()._iter_rank_chunks(rank, num_scheduled_tokens, is_prefilling)
+ 213              return
+ 214  
+ 215          decode_ordinal = 0
+ 216          num_chunks = 2 * self.pcp_world_size
+ 217          for req_idx, num_tokens in enumerate(num_scheduled_tokens):
+ 218              query_len = int(num_tokens)
+ 219              if query_len == 0:
+ 220                  continue
+ 221  
+ 222              if not is_prefilling[req_idx]:
+ 223                  owner_rank = decode_ordinal % self.pcp_world_size
+ 224                  decode_ordinal += 1
+ 225                  if rank == owner_rank:
+ 226                      yield req_idx, 0, query_len
+ 227                  continue
+ 228  
+ 229              # DCP == 1 here, so prefills use upstream&#x27;s DualChunkSwap split.
+ 230              chunk_size = (query_len + num_chunks - 1) // num_chunks
+ 231              for chunk_idx in (rank, num_chunks - 1 - rank):
+ 232                  chunk_offset = chunk_idx * chunk_size
+ 233                  chunk_len = min(chunk_size, query_len - chunk_offset)
+ 234                  if chunk_len &gt; 0:
+ 235                      yield req_idx, chunk_offset, chunk_len</code></pre></div></details></section><section class="chapter" id="coordinates"><a class="toplink" href="#top">本篇目录 ↑</a><span class="num">02 / 03</span><h2>三个坐标：global、local、gathered</h2><p class="intro">三个顺序分别回答“请求本来是什么顺序”“本 rank 算哪些行”“collective 后按什么顺序写 KV”。它们不是三个不同的请求池。</p><div class="table-scroll"><table><thead><tr><th>坐标</th><th>长什么样</th><th>谁使用</th></tr></thead><tbody><tr><td>global batch</td><td>Scheduler 本步规范的请求 / token 顺序。</td><td>请求状态、全局 block / slot 映射、恢复后的采样输入。</td></tr><tr><td>rank-local batch</td><td>本 rank 被分配到的 token，可能混合不同请求，含执行 padding。</td><td>模型前向、局部 query、局部 attention metadata。</td></tr><tr><td>padded gathered rows</td><td>rank0 的本地行及 padding，接着 rank1，依次拼接。</td><td>KV collective 后的写入顺序；需要与 gathered slot mapping 一一对应。</td></tr></tbody></table></div><h3>用源码自带的字母例子理解映射</h3><pre class="example"><code>global:               [A B C D E F G]
+rank0 / rank1:        [A B G] / [C D E F]
+padded gathered:      [A B G _ | C D E F]
+hidden_restore_idx:   [0,1,4,5,6,7,2]
+padded_gather_idx:    [0,1,6,0,2,3,4,5]</code></pre><p><code>gathered[hidden_restore_idx]</code> 恢复 A～G；<code>global[padded_gather_idx]</code> 得到 rank-major 写行。padding 位置的索引即使合法，也必须由 <code>gathered_kv_write_mask</code> 标为不可写，再变成 <code>PAD_SLOT</code>。否则例子中的占位行会误写 A 的缓存。</p><aside class="note">这是 Core _build_batch_layout 中解释索引含义的教学例子，不是一条长度 7 Prefill 请求按 DualChunkSwap 切分的实测结果。复制 Decode 的重复行也要去重；“参与 gather”不等于“每行都允许落 KV”。</aside><details class="evidence"><summary>源码依据 · 映射定义与有效写 mask</summary><div class="source"><p><a href="https://github.com/vllm-project/vllm/blob/24420b7a341af37a9bc3186e6fc6062512e0aa58/vllm/v1/worker/gpu/pcp_manager.py#L343-L425" target="_blank" rel="noopener">vllm/v1/worker/gpu/pcp_manager.py · L343–425 ↗</a><small>vllm @24420b7a341a · 真实源码，已裁剪，保留原行号</small></p><pre><code> 343      def _build_batch_layout(
+ 344          self,
+ 345          num_scheduled_tokens: np.ndarray,
+ 346          num_computed_tokens: np.ndarray,
+ 347          is_prefilling: np.ndarray,
+ 348          query_start_loc_np: np.ndarray,
+ 349          padded_num_tokens: int | None = None,
+ 350      ) -&gt; tuple[list[list[RankSegment]], list[int]]:
+ 351          replicated = self.replicated_requests(num_scheduled_tokens, is_prefilling)
+ 352          segments_by_rank = []
+ 353          per_rank_num_tokens = []
+ 354          for rank in range(self.pcp_world_size):
+ 355              segments = self._get_rank_segments(
+ 356                  rank,
+ 357                  num_scheduled_tokens,
+ 358                  is_prefilling,
+ 359                  query_start_loc_np,
+ 360              )
+ 361              num_rank_tokens = sum(segment.num_tokens for segment in segments)
+ 362              segments_by_rank.append(segments)
+ 363              per_rank_num_tokens.append(num_rank_tokens)
+ 364  
+ 365          # PCP=2 example:
+ 366          #   global batch:       [A B C D E F G]
+ 367          #   rank 0 / rank 1:    [A B G] / [C D E F]
+ 368          #   padded gathered:    [A B G _ | C D E F]
+ 369          #   hidden_restore_idx: [0, 1, 4, 5, 6, 7, 2]
+ 370          #   padded_gather_idx:  [0, 1, 6, 0, 2, 3, 4, 5]
+ 371          # Therefore global = gathered[hidden_restore_idx] and
+ 372          # padded_gathered = global[padded_gather_idx].
+ 373          hidden_restore_idx = np.empty(int(query_start_loc_np[-1]), dtype=np.int64)
+ 374          if padded_num_tokens is None:
+ 375              padded_num_tokens = max(per_rank_num_tokens)
+ 376          elif padded_num_tokens &lt; max(per_rank_num_tokens):
+ 377              raise ValueError(
+ 378                  &quot;PCP padded token count is smaller than the largest rank-local &quot;
+ 379                  f&quot;batch: {padded_num_tokens} &lt; {max(per_rank_num_tokens)}.&quot;
+ 380              )
+ 381          num_expanded_tokens = padded_num_tokens * self.pcp_world_size
+ 382          padded_gather_idx = np.zeros(num_expanded_tokens, dtype=np.int64)
+ 383          gathered_kv_write_mask = np.zeros(num_expanded_tokens, dtype=np.bool_)
+ 384          for rank, segments in enumerate(segments_by_rank):
+ 385              expanded_rank_offset = rank * padded_num_tokens
+ 386              for segment in segments:
+ 387                  padded_gathered_slice = slice(
+ 388                      expanded_rank_offset + segment.rank_local_batch_slice.start,
+ 389                      expanded_rank_offset + segment.rank_local_batch_slice.stop,
+ 390                  )
+ 391                  padded_gather_idx[padded_gathered_slice] = np.arange(
+ 392                      segment.global_batch_slice.start,
+ 393                      segment.global_batch_slice.stop,
+ 394                      dtype=np.int64,
+ 395                  )
+ 396                  # Replicated rows contain identical KV, so rank 0 is the
+ 397                  # canonical writer. A sharded decode has exactly one owner and
+ 398                  # therefore needs no de-duplication here.
+ 399                  is_sharded_decode = (
+ 400                      not bool(is_prefilling[segment.global_batch_req_idx])
+ 401                      and self.shard_decode_requests
+ 402                  )
+ 403                  if (
+ 404                      replicated[segment.global_batch_req_idx]
+ 405                      and not is_sharded_decode
+ 406                      and rank != 0
+ 407                  ):
+ 408                      continue
+ 409                  gathered_kv_write_mask[padded_gathered_slice] = True
+ 410                  hidden_restore_idx[segment.global_batch_slice] = np.arange(
+ 411                      padded_gathered_slice.start,
+ 412                      padded_gathered_slice.stop,
+ 413                      dtype=np.int64,
+ 414                  )
+ 415  
+ 416          self._hidden_restore_idx = async_tensor_h2d(
+ 417              hidden_restore_idx, device=self.device
+ 418          )
+ 419          self._padded_gather_idx = async_tensor_h2d(
+ 420              padded_gather_idx, device=self.device
+ 421          )
+ 422          self._gathered_kv_write_mask = async_tensor_h2d(
+ 423              gathered_kv_write_mask, device=self.device
+ 424          )
+ 425          return segments_by_rank, per_rank_num_tokens</code></pre></div><div class="source"><p><a href="https://github.com/vllm-project/vllm/blob/24420b7a341af37a9bc3186e6fc6062512e0aa58/vllm/v1/worker/gpu/pcp_manager.py#L787-L838" target="_blank" rel="noopener">vllm/v1/worker/gpu/pcp_manager.py · L787–838 ↗</a><small>vllm @24420b7a341a · 真实源码，已裁剪，保留原行号</small></p><pre><code> 787      def prepare_slot_mappings(self) -&gt; torch.Tensor:
+ 788          assert self._block_tables is not None
+ 789          assert self._global_batch_slot_mappings is not None
+ 790          assert self._global_batch is not None
+ 791          global_batch = self._global_batch
+ 792          global_batch_slot_mappings = self._block_tables.compute_slot_mappings(
+ 793              global_batch.idx_mapping,
+ 794              global_batch.query_start_loc,
+ 795              global_batch.positions,
+ 796              global_batch.num_tokens,
+ 797              out=self._global_batch_slot_mappings,
+ 798          )
+ 799          return self._convert_to_gathered_slot_mappings(global_batch_slot_mappings)
+ 800  
+ 801      def get_dummy_slot_mappings(self, num_tokens: int) -&gt; torch.Tensor:
+ 802          assert self._gathered_kv_slot_mappings is not None
+ 803          self._gathered_kv_slot_mappings.fill_(PAD_SLOT_ID)
+ 804          return self._gathered_kv_slot_mappings[:, : num_tokens * self.pcp_world_size]
+ 805  
+ 806      def _convert_to_gathered_slot_mappings(
+ 807          self, global_batch_slot_mappings: torch.Tensor
+ 808      ) -&gt; torch.Tensor:
+ 809          assert self._padded_gather_idx is not None
+ 810          assert self._gathered_kv_write_mask is not None
+ 811          padded_gather_idx = self._padded_gather_idx
+ 812          num_expanded_tokens = padded_gather_idx.shape[0]
+ 813          if self._gathered_kv_slot_mappings is None:
+ 814              self._gathered_kv_slot_mappings = global_batch_slot_mappings.new_empty(
+ 815                  global_batch_slot_mappings.shape[0], num_expanded_tokens
+ 816              )
+ 817          gathered_kv_slot_mappings = self._gathered_kv_slot_mappings[
+ 818              :, :num_expanded_tokens
+ 819          ]
+ 820          torch.index_select(
+ 821              global_batch_slot_mappings,
+ 822              1,
+ 823              padded_gather_idx,
+ 824              out=gathered_kv_slot_mappings,
+ 825          )
+ 826          torch.where(
+ 827              self._gathered_kv_write_mask.unsqueeze(0),
+ 828              gathered_kv_slot_mappings,
+ 829              self._pad_slot_id,
+ 830              out=gathered_kv_slot_mappings,
+ 831          )
+ 832          return gathered_kv_slot_mappings
+ 833  
+ 834      def restore_hidden_states(self, hidden_states: torch.Tensor) -&gt; torch.Tensor:
+ 835          if self._hidden_restore_idx is None:
+ 836              return hidden_states
+ 837          gathered = get_pcp_group().all_gather(hidden_states, dim=0)
+ 838          return gathered[self._hidden_restore_idx]</code></pre></div></details></section><section class="chapter" id="pcp-lifecycle"><a class="toplink" href="#top">本篇目录 ↑</a><span class="num">02 / 04</span><h2>一轮执行：先切输入，再写 KV，最后还原输出</h2><p class="intro">以下时序限定不开 HiSparse 的 PCP 数据契约；缓存如何量化和计算由具体 attention backend 承担。</p><figure class="diagram"><figcaption><strong>PCP 图 A｜单步输入与输出的闭环</strong><button class="diagram-full" type="button">放大图</button></figcaption><div class="diagram-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1025 1000" width="1025" height="1000" role="img" aria-label="PCP 图 A｜单步输入与输出的闭环"><defs><marker id="m80-5631-13" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#236e77"/></marker></defs><rect x="7.0" y="14" width="186" height="61" rx="7" fill="#eef3ef" stroke="#236e77"/><text x="100.0" y="39" font-size="13" fill="#203f43" text-anchor="middle" font-weight="600"><tspan x="100.0" dy="0">全局 InputBatch</tspan></text><path d="M100.0,76 L100.0,980" stroke="#b0bebc" stroke-dasharray="4 5"/><rect x="213.25" y="14" width="186" height="61" rx="7" fill="#eef3ef" stroke="#236e77"/><text x="306.25" y="39" font-size="13" fill="#203f43" text-anchor="middle" font-weight="600"><tspan x="306.25" dy="0">PCPManager</tspan></text><path d="M306.25,76 L306.25,980" stroke="#b0bebc" stroke-dasharray="4 5"/><rect x="419.5" y="14" width="186" height="61" rx="7" fill="#eef3ef" stroke="#236e77"/><text x="512.5" y="39" font-size="13" fill="#203f43" text-anchor="middle" font-weight="600"><tspan x="512.5" dy="0">本 rank 模型 / SFA</tspan></text><path d="M512.5,76 L512.5,980" stroke="#b0bebc" stroke-dasharray="4 5"/><rect x="625.75" y="14" width="186" height="61" rx="7" fill="#eef3ef" stroke="#236e77"/><text x="718.75" y="39" font-size="13" fill="#203f43" text-anchor="middle" font-weight="600"><tspan x="718.75" dy="0">PCP group</tspan></text><path d="M718.75,76 L718.75,980" stroke="#b0bebc" stroke-dasharray="4 5"/><rect x="832.0" y="14" width="186" height="61" rx="7" fill="#eef3ef" stroke="#236e77"/><text x="925.0" y="39" font-size="13" fill="#203f43" text-anchor="middle" font-weight="600"><tspan x="925.0" dy="0">采样 / Draft</tspan></text><path d="M925.0,76 L925.0,980" stroke="#b0bebc" stroke-dasharray="4 5"/><rect x="10" y="98" width="1005" height="40" rx="4" fill="#e4ebe9"/><text x="26" y="123" font-size="14" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="26" dy="0">输入切分</tspan></text><path d="M100.0,197 L306.25,197" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m80-5631-13)" /><text x="203.125" y="189.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="203.125" dy="0"></tspan></text><text x="203.125" y="168" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="203.125" dy="0">partition_batch(global batch)</tspan></text><path d="M306.25,274 L512.5,274" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m80-5631-13)" /><text x="409.375" y="266.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="409.375" dy="0"></tspan></text><text x="409.375" y="245" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="409.375" dy="0">local batch + attention context</tspan></text><rect x="10" y="316" width="1005" height="40" rx="4" fill="#e4ebe9"/><text x="26" y="341" font-size="14" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="26" dy="0">逐层：本地 query，KV 按正确行落位</tspan></text><path d="M512.5,415 L718.75,415" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m80-5631-13)" /><text x="615.625" y="407.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="615.625" dy="0"></tspan></text><text x="615.625" y="386" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="615.625" dy="0">需要交换的本步新 KV：AllGather</tspan></text><path d="M718.75,492 L512.5,492" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m80-5631-13)" /><text x="615.625" y="484.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="615.625" dy="0"></tspan></text><text x="615.625" y="463" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="615.625" dy="0">rank-major KV + gathered slots</tspan></text><path d="M512.5,546 h-50 v26 h50" fill="none" stroke="#236e77" marker-end="url(#m80-5631-13)"/><text x="452.5" y="551" font-size="12" fill="#203f43" text-anchor="end" font-weight="400"><tspan x="452.5" dy="0">有效行写 cache；执行局部 query attention</tspan></text><rect x="10" y="611" width="1005" height="40" rx="4" fill="#e4ebe9"/><text x="26" y="636" font-size="14" fill="#203f43" text-anchor="start" font-weight="600"><tspan x="26" dy="0">输出恢复</tspan></text><path d="M512.5,710 L306.25,710" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m80-5631-13)" /><text x="409.375" y="702.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="409.375" dy="0"></tspan></text><text x="409.375" y="681" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="409.375" dy="0">rank-local hidden states</tspan></text><path d="M306.25,787 L718.75,787" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m80-5631-13)" /><text x="512.5" y="779.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="512.5" dy="0"></tspan></text><text x="512.5" y="758" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="512.5" dy="0">all_gather(hidden states)</tspan></text><path d="M718.75,864 L306.25,864" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m80-5631-13)" /><text x="512.5" y="856.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="512.5" dy="0"></tspan></text><text x="512.5" y="835" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="512.5" dy="0">用 hidden_restore_idx 恢复 global order</tspan></text><path d="M306.25,941 L925.0,941" stroke="#236e77" stroke-width="1.6" fill="none" marker-end="url(#m80-5631-13)" /><text x="615.625" y="933.0" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="615.625" dy="0"></tspan></text><text x="615.625" y="912" font-size="12" fill="#203f43" text-anchor="middle" font-weight="400"><tspan x="615.625" dy="0">规范请求顺序；draft 另有布局规则</tspan></text></svg></div><p class="caption">根据 PCPManager 的 slot / hidden 恢复与 Ascend SFA exec_kv 重绘。是否交换 KV 由布局和 replicated / sharded 策略决定；并非每一步必然提交同一 collective。 · 箭头表示标注的调用或数据关系，非未标明的继承关系。版本：Core 24420b7a / Ascend 14a31903。</p></figure><details class="evidence"><summary>源码依据 · partition 后的本地状态修正与 hidden 恢复</summary><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/worker/v2/pcp_manager.py#L310-L371" target="_blank" rel="noopener">vllm_ascend/worker/v2/pcp_manager.py · L310–371 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code> 310      def partition_batch(
+ 311          self,
+ 312          input_batch: AscendInputBatch,
+ 313          batch_desc: BatchExecutionDescriptor,
+ 314      ) -&gt; AscendInputBatch:
+ 315          &quot;&quot;&quot;Partition the batch and update Ascend-specific local metadata.&quot;&quot;&quot;
+ 316          local_batch = super().partition_batch(input_batch, batch_desc)
+ 317          assert isinstance(local_batch, AscendInputBatch)
+ 318          # A sharded decode graph is sized per rank, so upstream can pad the
+ 319          # local requests. Replicated decode graphs are padded below instead.
+ 320          padded_num_reqs = batch_desc.num_reqs if batch_desc.cg_mode == CUDAGraphMode.FULL else None
+ 321          local_batch = self._finalize_partition(input_batch, local_batch, padded_num_reqs)
+ 322          # Upstream draft prefill reuses _local_batch; keep it the exact batch the
+ 323          # target ran, including Ascend FIA/graph padding, so the draft input
+ 324          # length equals the target metadata&#x27;s last query offset.
+ 325          self._local_batch = local_batch
+ 326          self._sampling_global_batch = None
+ 327          return local_batch
+ 328  
+ 329      def _finalize_partition(
+ 330          self,
+ 331          global_batch: AscendInputBatch,
+ 332          local_batch: AscendInputBatch,
+ 333          padded_num_reqs: int | None,
+ 334      ) -&gt; AscendInputBatch:
+ 335          &quot;&quot;&quot;Refresh Ascend-only local metadata after upstream PCP partitioning.&quot;&quot;&quot;
+ 336          local_batch.is_dummy = getattr(global_batch, &quot;is_dummy&quot;, False)
+ 337          local_batch.is_cpp_profile = getattr(global_batch, &quot;is_cpp_profile&quot;, False)
+ 338          self._pad_hidden_restore_idx(global_batch)
+ 339          if not self.is_decode_sharded:
+ 340              local_batch = self._pad_replicated_decode_graph(global_batch, local_batch)
+ 341          elif padded_num_reqs is not None:
+ 342              self._pad_uniform_query_start_loc(global_batch, local_batch)
+ 343  
+ 344          actual_seq_lens_np = local_batch.num_computed_tokens_np + local_batch.num_scheduled_tokens
+ 345          if local_batch.num_tokens == 0:
+ 346              # An empty rank keeps one zero-token placeholder request whose
+ 347              # device sequence length upstream already sets to zero.
+ 348              actual_seq_lens_np[:] = 0
+ 349              local_batch.seq_lens_cpu_upper_bound.zero_()
+ 350          if local_batch.num_reqs_after_padding &gt; local_batch.num_reqs:
+ 351              assert self._input_buffers is not None
+ 352              seq_lens_np = self._input_buffers.seq_lens_np
+ 353              seq_lens_np[: local_batch.num_reqs] = actual_seq_lens_np
+ 354              seq_lens_np[local_batch.num_reqs : local_batch.num_reqs_after_padding] = 0
+ 355              local_batch.seq_lens_np = seq_lens_np[: local_batch.num_reqs_after_padding]
+ 356          else:
+ 357              local_batch.seq_lens_np = actual_seq_lens_np
+ 358          # Preserve the global attention state for decode-only batches, including
+ 359          # empty ranks, before upstream clears local draft metadata.
+ 360          if not bool(global_batch.is_prefilling_np.any()):
+ 361              return local_batch
+ 362  
+ 363          local_batch.attn_state = build_attn_state(
+ 364              self.vllm_config,
+ 365              actual_seq_lens_np,
+ 366              local_batch.num_reqs,
+ 367              local_batch.num_scheduled_tokens,
+ 368              local_batch.num_scheduled_tokens,
+ 369              kv_cache_config=self.kv_cache_config,
+ 370          )
+ 371          return local_batch</code></pre></div><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/worker/v2/pcp_manager.py#L514-L538" target="_blank" rel="noopener">vllm_ascend/worker/v2/pcp_manager.py · L514–538 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code> 514      def restore_hidden_states(self, hidden_states: torch.Tensor) -&gt; torch.Tensor:
+ 515          &quot;&quot;&quot;Restore tokens to the global PCP layout, following the batch length.
+ 516  
+ 517          The FIA-padded global ``query_start_loc`` sizes upstream&#x27;s restore
+ 518          indices to ``num_tokens_after_padding``; ``_pad_hidden_restore_idx``
+ 519          makes those padding rows valid, and they read as zeros here. Fixed-K
+ 520          speculative decode sharding restores to the unpadded global batch
+ 521          instead, returning the compact ``num_tokens`` rows.
+ 522          &quot;&quot;&quot;
+ 523          if not self.is_last_pp_rank:
+ 524              return hidden_states
+ 525  
+ 526          # PP and draft states can be strided views; HCCL requires dense inputs.
+ 527          restored_hidden_states = super().restore_hidden_states(hidden_states.contiguous())
+ 528          if self._global_batch is None:
+ 529              return restored_hidden_states
+ 530  
+ 531          num_tokens = self._global_batch.num_tokens
+ 532          if num_tokens == self._global_batch.num_tokens_after_padding:
+ 533              return restored_hidden_states
+ 534  
+ 535          restored_hidden_states[num_tokens:].zero_()
+ 536          if self._restore_unpadded_global_batch():
+ 537              restored_hidden_states = restored_hidden_states[:num_tokens]
+ 538          return restored_hidden_states</code></pre></div><div class="source"><p><a href="https://github.com/vllm-project/vllm/blob/24420b7a341af37a9bc3186e6fc6062512e0aa58/vllm/v1/worker/gpu/pcp_manager.py#L834-L838" target="_blank" rel="noopener">vllm/v1/worker/gpu/pcp_manager.py · L834–838 ↗</a><small>vllm @24420b7a341a · 真实源码，已裁剪，保留原行号</small></p><pre><code> 834      def restore_hidden_states(self, hidden_states: torch.Tensor) -&gt; torch.Tensor:
+ 835          if self._hidden_restore_idx is None:
+ 836              return hidden_states
+ 837          gathered = get_pcp_group().all_gather(hidden_states, dim=0)
+ 838          return gathered[self._hidden_restore_idx]</code></pre></div></details></section><section class="chapter" id="kv-exchange"><a class="toplink" href="#top">本篇目录 ↑</a><span class="num">02 / 05</span><h2>不开 HiSparse 时，Ascend SFA 如何交换 KV</h2><p class="intro">本节选取 Ascend SFA 的 exec_kv 作为具体例子，不把它外推为所有 attention backend 的共同实现。</p><ol class="steps"><li><code>needs_pcp_kv_gather</code> 先看是否为 PCP sharded layout。分片 Decode，或本地 / 全局存在 Prefill 时需要交换；复制 draft 的未扩展布局不按分片布局处理。</li><li>确定本地行数与 replicated decode 行数。相同的复制行保留一次，分片部分通过 PCP group 的 <code>all_gather_async</code> 汇集。</li><li>需要时同时交换 KV 投影输入及 cos / sin；slot mapping 取相同的 rank-major 范围。不是先把 query 排回 global 再写缓存。</li><li>允许 defer_wait 时，返回一个 finish 闭包；在 finish 中等待 collective，拼接复制段与 gathered 段，检查每个写行对应一个 slot，再进入 <code>_exec_kv_local</code>。</li><li>这段代码使 KV AllGather 可与 Q projection 重叠；它不等于 HiSparse Host H2D 被完全掩盖，更不能从代码直接推出整网 TPOT 收益。</li></ol><div class="takeaway"><strong>为什么“本 rank 没 Prefill”仍可能要 gather？</strong>另一个 rank 可能分到了本步 Prefill。<code>pcp_has_global_prefill</code> 使所有参与者遵循同一 collective 决策；只检查本地 num_prefills 会破坏这一契约。</div><details class="evidence"><summary>源码依据 · SFA 判断、提交与完成闭包</summary><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/attention/sfa_v1.py#L484-L494" target="_blank" rel="noopener">vllm_ascend/attention/sfa_v1.py · L484–494 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code> 484  def needs_pcp_kv_gather(attn_metadata: AscendSFAMetadata, is_decode_sharded: bool) -&gt; bool:
+ 485      &quot;&quot;&quot;Whether PCP ranks must exchange this step&#x27;s KV.
+ 486  
+ 487      Only replicated decode-only steps already hold identical KV on every
+ 488      rank, including graph padding. Ranks without local prefill still join the
+ 489      gather when another rank has one. A step built without a PCP context
+ 490      (e.g. a replicated draft decode) keeps an unexpanded slot mapping.
+ 491      &quot;&quot;&quot;
+ 492      if not attn_metadata.uses_pcp_sharded_layout:
+ 493          return False
+ 494      return is_decode_sharded or attn_metadata.num_prefills &gt; 0 or attn_metadata.pcp_has_global_prefill</code></pre></div><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/attention/sfa_v1.py#L1290-L1350" target="_blank" rel="noopener">vllm_ascend/attention/sfa_v1.py · L1290–1350 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code>1290          &quot;&quot;&quot;Prepare KV once; optionally defer completion until after Q projection.&quot;&quot;&quot;
+1291          gather_kv = self.pcp_enabled and needs_pcp_kv_gather(attn_metadata, self.is_pcp_decode_sharded)
+1292          if gather_kv and self.qk_rope_head_dim == 0:
+1293              # NoPE projects actual tokens, but slots retain the padded rank stride.
+1294              pad = attn_metadata.num_input_tokens - kv_no_split.shape[0]
+1295              if pad &lt; 0:
+1296                  raise ValueError(&quot;SFA PCP KV exceeds the rank-local padded token count.&quot;)
+1297              if pad:
+1298                  kv_no_split = nn.functional.pad(kv_no_split, (0, 0, 0, pad))
+1299          local_rows = kv_no_split.shape[0]
+1300          replicated = 0
+1301          inputs: tuple[torch.Tensor, ...] = (kv_no_split,)
+1302          pending: tuple[tuple[torch.Tensor, torch.distributed.Work | None], ...] = ()
+1303          sends: tuple[torch.Tensor, ...] = ()
+1304          if gather_kv:
+1305              replicated = get_pcp_num_replicated_tokens(attn_metadata.num_decode_tokens or 0, self.is_pcp_decode_sharded)
+1306              assert 0 &lt;= replicated &lt;= local_rows
+1307              if self.qk_rope_head_dim:
+1308                  assert cos is not None and sin is not None
+1309                  inputs = (kv_no_split, cos, sin)
+1310              assert all(value.shape[0] == local_rows for value in inputs)
+1311              # Preserve replicated/draft decode writes without submitting a collective.
+1312              if slots.shape[0] &lt;= local_rows or replicated == local_rows:
+1313                  inputs = tuple(value[:replicated] for value in inputs)
+1314                  slots = slots[:replicated]
+1315              else:
+1316                  group = get_pcp_group()
+1317                  sends = tuple(value[replicated:].contiguous() for value in inputs)
+1318                  pending = tuple(all_gather_async(send, group) for send in sends)
+1319                  slots = slots[: group.world_size * local_rows]
+1320                  if replicated:
+1321                      rank_slots = slots.view(group.world_size, local_rows)
+1322                      slots = torch.cat((rank_slots[0, :replicated], rank_slots[:, replicated:].flatten()))
+1323                  if defer_wait:
+1324                      logger.info_once(&quot;SFA PCP main KV AllGather overlaps MLA Q projection.&quot;)
+1325          elif self.pcp_enabled:
+1326              slots = slots[:local_rows]
+1327  
+1328          def finish():
+1329              # Retain the contiguous sends until HCCL has finished reading them.
+1330              _ = sends
+1331              for _, work in pending:
+1332                  if work is not None:
+1333                      work.wait()
+1334              values = (
+1335                  tuple(
+1336                      torch.cat((value[:replicated], gathered), dim=0) if replicated else gathered
+1337                      for value, (gathered, _) in zip(inputs, pending)
+1338                  )
+1339                  if pending
+1340                  else inputs
+1341              )
+1342              if gather_kv:
+1343                  assert values[0].shape[0] == slots.numel(), (
+1344                      &quot;SFA PCP cache write requires one slot per gathered token: &quot;
+1345                      f&quot;tokens={values[0].shape[0]}, slots={slots.numel()}.&quot;
+1346                  )
+1347              gathered_cos, gathered_sin = values[1:] if len(values) &gt; 1 else (cos, sin)
+1348              return self._exec_kv_local(values[0], gathered_cos, gathered_sin, kv_cache, slots, attn_metadata)
+1349  
+1350          return finish if defer_wait else finish()</code></pre></div></details></section><section class="chapter" id="pcp-graph"><a class="toplink" href="#top">本篇目录 ↑</a><span class="num">02 / 06</span><h2>Graph 与 MTP：padding 和真实 token 要分开</h2><p class="intro">图捕获需要稳定地址与形状，采样和 draft 仍需要正确的真实请求边界。固定分支在 PCP 管理器里明确区分这两个用途。</p><div class="table-scroll"><table><thead><tr><th>边界</th><th>固定实现</th><th>为什么需要</th></tr></thead><tbody><tr><td>分片后的 attention 状态</td><td>_finalize_partition 更新本地 CPU 长度视图，按本地实际工作重建状态；空 rank 使用零长度占位。</td><td>全局 mixed batch 到某个 rank 上可以变成纯 Decode，甚至没有真实 query。</td></tr><tr><td>FULL decode graph slots</td><td>prepare_slot_mappings 把 compact gather slots 放入每 rank 的固定 graph stride；无效槽填 -1。</td><td>捕获形状不是实际 token 数；跨 rank padding 不能当真实 KV 写入。</td></tr><tr><td>持久 context</td><td>build_attention_context 交付 global batch、local indices、restore / gather indices 与 mask；捕获 / dummy 不沿用旧请求布局。</td><td>图内读的 buffer 地址和内容要对应本步，而不是上一轮 Python 临时 tensor。</td></tr><tr><td>sampling / draft 恢复</td><td>restore_for_sampling 区分 sharded draft aux hidden 与全局采样 hidden；需要时暴露无 padding 的 global batch。</td><td>目标模型图 padding 不能直接冒充 draft 自己的执行 padding。</td></tr></tbody></table></div><aside class="note">validate_config 的约束必须按具体枚举和方法读取：拒绝纯 CUDAGraphMode.FULL，不等于所有包含 FULL decode 的组合都被拒绝。固定 allowlist 也不能外推为任意 speculator 已验证。</aside><details class="evidence"><summary>源码依据 · 图 slot 布局与采样 / draft 边界</summary><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/worker/v2/pcp_manager.py#L251-L275" target="_blank" rel="noopener">vllm_ascend/worker/v2/pcp_manager.py · L251–275 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code> 251      def validate_config(
+ 252          vllm_config: VllmConfig,
+ 253          supports_mm_inputs: bool,
+ 254      ) -&gt; None:
+ 255          &quot;&quot;&quot;Validate the graph-safe Ascend MRV2 PCP configuration.&quot;&quot;&quot;
+ 256          model_config = vllm_config.model_config
+ 257          pcp_size = vllm_config.parallel_config.prefill_context_parallel_size
+ 258          if pcp_size &lt;= 1:
+ 259              return
+ 260  
+ 261          if model_config.is_encoder_decoder:
+ 262              raise NotImplementedError(&quot;MRV2 PCP does not support encoder-decoder models yet.&quot;)
+ 263          if vllm_config.lora_config is not None:
+ 264              raise NotImplementedError(&quot;MRV2 PCP does not support LoRA yet.&quot;)
+ 265  
+ 266          speculative_config = vllm_config.speculative_config
+ 267          if speculative_config is not None:
+ 268              if speculative_config.method not in (&quot;mtp&quot;, &quot;eagle3&quot;, &quot;dspark&quot;):
+ 269                  raise NotImplementedError(
+ 270                      &quot;Ascend MRV2 PCP supports speculative decoding only with MTP, Eagle3 and DSpark.&quot;
+ 271                  )
+ 272  
+ 273          cudagraph_mode = vllm_config.compilation_config.cudagraph_mode
+ 274          if cudagraph_mode == CUDAGraphMode.FULL:
+ 275              raise NotImplementedError(&quot;MRV2 PCP does not support FULL CUDA graphs.&quot;)</code></pre></div><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/worker/v2/pcp_manager.py#L564-L591" target="_blank" rel="noopener">vllm_ascend/worker/v2/pcp_manager.py · L564–591 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code> 564      def restore_for_sampling(
+ 565          self,
+ 566          hidden_states: torch.Tensor,
+ 567          aux_hidden_states: list[torch.Tensor] | None,
+ 568      ) -&gt; tuple[torch.Tensor, list[torch.Tensor] | None, InputBatch]:
+ 569          &quot;&quot;&quot;Restore sampling inputs and remember the batch given to the draft.
+ 570  
+ 571          Aux hidden states feed only the speculator. Sharded drafts (Eagle3)
+ 572          consume them in the target&#x27;s rank-local layout, next to the local
+ 573          last hidden states; replicated drafts (DSpark) consume them globally.
+ 574          &quot;&quot;&quot;
+ 575          assert self._global_batch is not None
+ 576          if self._is_draft_prefill_sharded:
+ 577              # Keep local aux states for the sharded draft; only sampling needs
+ 578              # the main hidden states restored to the global layout.
+ 579              hidden_states, _, global_batch = super().restore_for_sampling(hidden_states, None)
+ 580          else:
+ 581              hidden_states, aux_hidden_states, global_batch = super().restore_for_sampling(
+ 582                  hidden_states, aux_hidden_states
+ 583              )
+ 584          if self._restore_unpadded_global_batch():
+ 585              global_batch = self._expose_unpadded_global_batch(global_batch)
+ 586              num_tokens = global_batch.num_tokens
+ 587              hidden_states = hidden_states[:num_tokens]
+ 588              if not self._is_draft_prefill_sharded and aux_hidden_states is not None:
+ 589                  aux_hidden_states = [states[:num_tokens] for states in aux_hidden_states]
+ 590          self._sampling_global_batch = global_batch
+ 591          return hidden_states, aux_hidden_states, global_batch</code></pre></div><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/worker/v2/pcp_manager.py#L645-L694" target="_blank" rel="noopener">vllm_ascend/worker/v2/pcp_manager.py · L645–694 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code> 645      def prepare_slot_mappings(self) -&gt; torch.Tensor:
+ 646          &quot;&quot;&quot;Pad PCP slot mappings to the fixed FULL-decode graph layout.
+ 647  
+ 648          The upstream manager packs current local rows as
+ 649          [rank 0 rows | rank 1 rows | ...]. A full-decode graph pads the model
+ 650          input of each PCP rank to graph_num_tokens. Preserve that rank-major
+ 651          layout when expanding the slot mapping:
+ 652          [rank 0 rows | rank 0 padding | rank 1 rows | rank 1 padding | ...].
+ 653  
+ 654          Sharded decode already uses the rank-local graph stride upstream.
+ 655          &quot;&quot;&quot;
+ 656          slot_mappings = super().prepare_slot_mappings()
+ 657          assert self._global_batch is not None
+ 658          graph_num_tokens = self._global_batch.num_tokens_after_padding
+ 659          is_decode_only = not bool(self._global_batch.is_prefilling_np.any())
+ 660          if self.is_decode_sharded or not is_decode_only or graph_num_tokens &lt;= self._global_batch.num_tokens:
+ 661              return slot_mappings
+ 662  
+ 663          assert self._gathered_kv_slot_mappings is not None
+ 664          graph_num_slots = graph_num_tokens * self.pcp_world_size
+ 665          local_num_tokens = slot_mappings.shape[1] // self.pcp_world_size
+ 666          if local_num_tokens * self.pcp_world_size != slot_mappings.shape[1]:
+ 667              raise RuntimeError(
+ 668                  &quot;PCP gathered slot mappings must contain an equal local span &quot;
+ 669                  f&quot;for every rank, got {slot_mappings.shape[1]} slots for &quot;
+ 670                  f&quot;pcp_world_size={self.pcp_world_size}.&quot;
+ 671              )
+ 672  
+ 673          graph_slot_mappings = self._gathered_kv_slot_mappings[:, :graph_num_slots]
+ 674          # The compact source is a view of this reusable destination buffer.
+ 675          # Snapshot it first: a graph stride can overlap the next compact rank
+ 676          # span (for example, 3 compact tokens expanded to a 4-token graph).
+ 677          compact_slot_mappings = slot_mappings.clone()
+ 678          for pcp_rank in range(self.pcp_world_size):
+ 679              source_start = pcp_rank * local_num_tokens
+ 680              target_start = pcp_rank * graph_num_tokens
+ 681              graph_slot_mappings[:, target_start : target_start + local_num_tokens].copy_(
+ 682                  compact_slot_mappings[:, source_start : source_start + local_num_tokens]
+ 683              )
+ 684              graph_slot_mappings[:, target_start + local_num_tokens : target_start + graph_num_tokens].fill_(-1)
+ 685          return graph_slot_mappings
+ 686  
+ 687      def refresh_gathered_slot_mappings(self, slot_mappings: torch.Tensor) -&gt; None:
+ 688          &quot;&quot;&quot;Publish updated global slots in the original rank-major PCP layout.&quot;&quot;&quot;
+ 689          assert self._global_batch is not None
+ 690          assert self._global_batch_slot_mappings is not None
+ 691          global_slots = self._global_batch_slot_mappings[:, : self._global_batch.num_tokens]
+ 692          gathered_slots = self._convert_to_gathered_slot_mappings(global_slots)
+ 693          if gathered_slots.data_ptr() != slot_mappings.data_ptr():
+ 694              slot_mappings.copy_(gathered_slots)</code></pre></div><div class="source"><p><a href="https://github.com/zyz111222/vllm-ascend/blob/14a31903a98f2b913c8fbe2bcb02d37a544889ba/vllm_ascend/worker/v2/pcp_manager.py#L729-L794" target="_blank" rel="noopener">vllm_ascend/worker/v2/pcp_manager.py · L729–794 ↗</a><small>vllm-ascend @14a31903a98f · 真实源码，已裁剪，保留原行号</small></p><pre><code> 729      def build_attention_context(
+ 730          self,
+ 731          input_batch: AscendInputBatch | None = None,
+ 732          block_tables: tuple[torch.Tensor, ...] | None = None,
+ 733          slot_mappings: torch.Tensor | None = None,
+ 734      ) -&gt; AscendPCPAttentionContext:
+ 735          &quot;&quot;&quot;Build PCP context for the current real, capture, or idle DP batch.&quot;&quot;&quot;
+ 736          if input_batch is not None and input_batch.is_dummy and not input_batch.is_cpp_profile:
+ 737              # Both capture and runtime dummy batches bypass partition_batch().
+ 738              # Saved layout state may be absent or belong to a previous request.
+ 739              assert block_tables is not None
+ 740              assert slot_mappings is not None
+ 741              num_tokens = input_batch.num_tokens_after_padding
+ 742              query_len, remainder = divmod(num_tokens, input_batch.num_reqs_after_padding)
+ 743              if self.is_decode_sharded and remainder == 0:
+ 744                  return self._build_sharded_dummy_attention_context(input_batch, query_len)
+ 745              restore_start = self.pcp_rank * num_tokens
+ 746              return AscendPCPAttentionContext(
+ 747                  global_batch=input_batch,
+ 748                  local_request_state_indices=input_batch.idx_mapping,
+ 749                  local_num_tokens=num_tokens,
+ 750                  local_to_global_req_indices=tuple(range(input_batch.num_reqs)),
+ 751                  global_block_tables=block_tables,
+ 752                  global_slot_mappings=slot_mappings.view(slot_mappings.shape[0], self.pcp_world_size, num_tokens)[
+ 753                      :, self.pcp_rank
+ 754                  ],
+ 755                  hidden_restore_idx=torch.arange(restore_start, restore_start + num_tokens, device=self.device),
+ 756              )
+ 757  
+ 758          global_batch = self._global_batch
+ 759          hidden_restore_idx = self._hidden_restore_idx
+ 760          assert global_batch is not None
+ 761          local_batch = self._local_batch if input_batch is None else input_batch
+ 762          assert local_batch is not None
+ 763          assert self._local_gather_idx is not None
+ 764          assert self._block_tables is not None
+ 765          assert self._global_batch_slot_mappings is not None
+ 766          assert hidden_restore_idx is not None
+ 767          global_block_table_num_blocks = None
+ 768          local_to_global_req_indices = None
+ 769          if self.dcp_world_size &gt; 1 and bool(global_batch.is_prefilling_np.any()):
+ 770              global_block_table_num_blocks = torch.from_numpy(
+ 771                  self._block_tables.num_blocks.np[:, global_batch.idx_mapping_np[: global_batch.num_reqs]]
+ 772              ).to(device=self.device, non_blocking=True)
+ 773              global_rows = {
+ 774                  int(state): row for row, state in enumerate(global_batch.idx_mapping_np[: global_batch.num_reqs])
+ 775              }
+ 776              local_to_global_req_indices = tuple(
+ 777                  global_rows[int(state)] for state in local_batch.idx_mapping_np[: local_batch.num_reqs]
+ 778              )
+ 779          return AscendPCPAttentionContext(
+ 780              global_batch=global_batch,
+ 781              local_request_state_indices=local_batch.idx_mapping,
+ 782              local_num_tokens=local_batch.num_tokens_after_padding,
+ 783              local_to_global_req_indices=local_to_global_req_indices,
+ 784              local_token_indices=self._local_gather_idx[: local_batch.num_tokens],
+ 785              global_block_tables=self._block_tables.gather_block_tables(
+ 786                  global_batch.idx_mapping,
+ 787                  global_batch.num_reqs_after_padding,
+ 788              ),
+ 789              global_slot_mappings=self._global_batch_slot_mappings[:, : global_batch.num_tokens_after_padding],
+ 790              hidden_restore_idx=hidden_restore_idx,
+ 791              padded_gather_idx=self._padded_gather_idx,
+ 792              gathered_kv_write_mask=self._gathered_kv_write_mask,
+ 793              global_block_table_num_blocks=global_block_table_num_blocks,
+ 794          )</code></pre></div></details></section><section class="chapter" id="pcp-deployment"><a class="toplink" href="#top">本篇目录 ↑</a><span class="num">02 / 07</span><h2>混部与 PD 分离：PCP 始终是引擎内部的分工</h2><p class="intro">Prefill 阶段的计算语义相通，部署中的交付责任不同。P 节点算完之后，D 能不能接着用缓存，还涉及另一套传输契约。</p><div class="table-scroll"><table><thead><tr><th>场景</th><th>PCP 负责</th><th>另一个边界</th></tr></thead><tbody><tr><td>混部 Prefill / Decode</td><td>同一引擎的 local query、gathered KV 与 global hidden 恢复。</td><td>没有跨引擎 KV 交付；是否用 HiSparse 由本引擎配置决定。</td></tr><tr><td>PD 的 P 节点</td><td>在 P 引擎内对 Prefill 做相同的切分与恢复。</td><td>生成的 KV 如何交给 D，取决于 KV connector、可传输组与内存布局。</td></tr><tr><td>PD 的 D 节点</td><td>D 用自己的并行配置和本地请求 / 缓存状态执行。</td><td>不能继承 P 的 rank-local slot / Resident / Hot 编号；接收完成要建立 D 的本地状态。</td></tr></tbody></table></div><p>因此，“P 不开 HiSparse，D 开 HiSparse，再加 PCP”同时涉及 P 引擎 PCP、P→D KV 交付、D 引擎 HiSparse 三层。下一篇把当前分支已经实现的同引擎组合，与尚未支持的外部 connector 组合分开。</p><p>跨引擎机制的固定源码依据见 <a href="hisparse.html#pd-flow">HiSparse 篇：Core PD 接口与收端恢复</a>；当前 Ascend 组合限制见 <a href="hisparse-pcp.html#support">组合篇：支持矩阵</a>。</p></section><section class="chapter" id="pcp-recap"><a class="toplink" href="#top">本篇目录 ↑</a><span class="num">02 / 08</span><h2>带着这四个契约进入组合篇</h2><p class="intro">先把 PCP 已提供的东西列清楚，再看 HiSparse 增加了什么。</p><ol class="steps"><li>global batch 保留规范请求身份；local batch 只描述本 rank 的计算工作。</li><li>新 KV 的写行顺序以 gathered slots 和 write mask 为准，不能使用 query 行数来代替。</li><li>hidden states 汇集后按 restore indices 回到全局顺序，采样 / draft 有各自边界。</li><li>graph / padding / 空 rank 必须服从同一 collective 与写入布局；HiSparse 适配继续复用这些契约。</li></ol><p>接下来读 <a href="hisparse-pcp.html">HiSparse + PCP 组合设计 →</a>。</p></section><nav class="page-turn" aria-label="篇章顺序"><a href="hisparse.html"><small>← 上一站</small>HiSparse 总览与详细机制</a><a class="next" href="hisparse-pcp.html"><small>下一站 →</small>HiSparse + PCP 组合设计</a></nav><footer>Core <code>24420b7a341af37a9bc3186e6fc6062512e0aa58</code><br>Ascend PCP <code>14a31903a98f2b913c8fbe2bcb02d37a544889ba</code><br>依据固定源码重绘并裁剪；不代表最新 main 或现场性能结论。已做离线结构、链接与交互检查；未做截图视觉校验。<br>源码版权与许可证见各原仓库。</footer></main></div><script>
+const toggle=document.getElementById('toggle-evidence');
+if(toggle)toggle.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expanded')!=='true';document.querySelectorAll('details.evidence').forEach(x=>x.open=open);toggle.setAttribute('aria-expanded',String(open));toggle.textContent=open?'折叠全部源码':'展开全部源码';});
+document.getElementById('print-page')?.addEventListener('click',()=>window.print());
+document.querySelectorAll('.diagram-full').forEach(b=>b.addEventListener('click',async()=>{if(document.fullscreenElement){await document.exitFullscreen();return;}await b.closest('figure').requestFullscreen();}));
+const links=[...document.querySelectorAll('.toc a')];
+const observer=new IntersectionObserver(entries=>{for(const e of entries)if(e.isIntersecting)links.forEach(a=>a.classList.toggle('active',a.hash==='#'+e.target.id));},{rootMargin:'-5% 0px -80% 0px'});
+document.querySelectorAll('.chapter').forEach(s=>observer.observe(s));
+window.addEventListener('scroll',()=>{const total=document.documentElement.scrollHeight-innerHeight;document.getElementById('progress').style.width=(total>0?scrollY/total*100:0)+'%';},{passive:true});
+</script></body></html>
