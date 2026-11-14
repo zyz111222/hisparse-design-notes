@@ -1,8 +1,10 @@
 # HiSparse 与 PCP 设计导读
 
+**[直接阅读网页版](https://zyz111222.github.io/hisparse-design-notes/)**
+
 以固定源码解释 vLLM Core、vLLM Ascend、PCP 和 PD 分离的职责及边界。
 
-**[查看 / 下载 HTML](hisparse-pcp-guide.html)**：在 GitHub 文件页点击下载按钮，保存后用浏览器打开。单文件离线可读；源码链接需联网。当前仓库为私有仓库。
+**[查看 / 下载 HTML](hisparse-pcp-guide.html)**：在 GitHub 文件页点击下载按钮，保存后用浏览器打开。单文件离线可读；源码链接需联网。当前仓库为个人公开仓库。
 
 - 核对日期：2026-11-14。
 - Core：`24420b7a341af37a9bc3186e6fc6062512e0aa58`，本次未修改。
