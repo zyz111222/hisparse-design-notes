@@ -12,4 +12,4 @@
 
 ## PR #21892 全量改动走读
 
-[在线阅读](https://zyz111222.github.io/hisparse-design-notes/pr21892-walkthrough.html) · [HTML 文件](pr21892-walkthrough.html)。固定 Ascend `d06ad2d6767875c203e241974446e17cd0c67b93` 与 main `faa43c37df0fc67e63ed9775cb86693c3735a389`，Core 调用链参考 `24420b7a341af37a9bc3186e6fc6062512e0aa58`；按总—分—总覆盖全部13个非UT变更文件，附逐文件diff。原三篇历史设计保持原版本。
+[在线阅读](https://zyz111222.github.io/hisparse-design-notes/pr21892-walkthrough.html) · [HTML 文件](pr21892-walkthrough.html)。固定 Ascend `c4c737ef9bc30f3c491ac6190d31c27a6a27d9b4` 与 main `faa43c37df0fc67e63ed9775cb86693c3735a389`，Core 调用链参考 `24420b7a341af37a9bc3186e6fc6062512e0aa58`；按总—分—总覆盖全部13个非UT变更文件，附逐文件diff。原三篇历史设计保持原版本。
