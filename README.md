@@ -9,3 +9,7 @@
 各页均内嵌样式、SVG 图与裁剪源码，无 CDN；下载 HTML 并保存在同目录可离线阅读。已检查桌面 / 窄屏结构、相对链接、章节导航和源码展开；未做截图视觉校验。
 
 关联：[基础 #20926](https://github.com/vllm-project/vllm-ascend/pull/20926)、[官仓 PCP #21892](https://github.com/vllm-project/vllm-ascend/pull/21892)、[个人 fork PCP #1](https://github.com/zyz111222/vllm-ascend/pull/1)。关联不表示已合入。
+
+## PR #21892 全量改动走读
+
+[在线阅读](https://zyz111222.github.io/hisparse-design-notes/pr21892-walkthrough.html) · [HTML 文件](pr21892-walkthrough.html)。固定 Ascend `d06ad2d6767875c203e241974446e17cd0c67b93` 与 main `faa43c37df0fc67e63ed9775cb86693c3735a389`，Core 调用链参考 `24420b7a341af37a9bc3186e6fc6062512e0aa58`；按总—分—总覆盖全部13个非UT变更文件，附逐文件diff。原三篇历史设计保持原版本。
