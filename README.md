@@ -13,3 +13,6 @@
 ## PR #21892 全量改动走读
 
 [当前网页](https://zyz111222.github.io/hisparse-design-notes/pr21892-walkthrough.html)：Ascend `0cfbf72e2331fc3035119af7a3231d5db6331b92` / main `b53996aad5d959f0b4511b4b87aadb2eb425b045` / Core `ba15685ab7f4f5fbed8630bbb7441f8837e76fbe`。解释第一PR的Prefill PCP + replicated decode，严格type门禁的原因与耦合代价；全部13个非UT文件及diff保留。[旧c4c737ef历史页](pr21892-walkthrough-c4c737ef.html)不代表当前实现。后续decode请求分片见#22069。
+
+
+2026-11-17：`pr21892-walkthrough.html` 改为整份 #21892 的图解设计，14张图、12章，覆盖初始化、查询/写入布局、同步/异步加载、Prolog/Native、Prefill/Decode/混合步、Graph、MTP、Host保存/重叠、回收与PD边界；原固定源码/diff保留在折叠附录。固定 Ascend `0cfbf72e2331fc3035119af7a3231d5db6331b92` / Core `ba15685ab7f4f5fbed8630bbb7441f8837e76fbe`。
