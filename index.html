@@ -9,7 +9,66 @@
 @media(max-width:1050px){.rail .site-nav{display:flex;flex-wrap:wrap;gap:3px}.rail .toc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.rail .site-nav a{flex:1;min-width:120px}.rail .topic{margin-top:9px}}
 @media(max-width:600px){.rail .toc{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:22px 18px}.card h2{font-size:25px}.page-turn a{padding:14px 12px}.card-top{letter-spacing:0}.example{font-size:12px}}
 @media print{.page-turn{display:none}}
-</style></head><body><div id="progress" aria-hidden="true"></div><div class="layout" id="top"><aside class="rail"><div class="brand">SOURCE-VERIFIED DESIGN<br>HISPARSE / ASCEND / PCP</div><nav class="site-nav" aria-label="主题导航"><a href="index.html" aria-current="page">目录首页</a><a href="hisparse.html">01 HiSparse 总览与详细机制</a><a href="pcp.html">02 PCP 原生设计</a><a href="hisparse-pcp.html">03 HiSparse + PCP 组合设计</a><a href="pr21892-walkthrough.html">04 #21892 图解设计</a></nav><small>固定提交走读 · 2026-11-15<br>图可横向滚动或放大；源码默认折叠。<br>三篇独立阅读，页面保存在同目录即可离线浏览。</small></aside><main><header><span class="eyebrow">ARCHITECTURE / PARALLELISM / INTEGRATION</span><h1>三个主题，<br>一条完整的设计主线。</h1><p class="lede">先理解 HiSparse 如何管理和搬运 KV，再理解 PCP 如何拆分计算与组织写入，最后看两者如何组合。</p><div class="path">01 HiSparse → 02 PCP → 03 HiSparse + PCP</div></header><a class="card" href="hisparse.html"><div class="card-top"><span>PART 01</span><span>13 章 · 9 图</span></div><h2>HiSparse 总览与详细机制</h2><p>从四类缓存与类关系，到调度、执行、回收、同步和 PD 交付；先建立 HiSparse 本体的完整因果链。</p><span class="enter">进入本篇 →</span></a><a class="card" href="pcp.html"><div class="card-top"><span>PART 02</span><span>8 章 · 1 图</span></div><h2>PCP 原生设计</h2><p>关闭 HiSparse，理解 Prefill 切分、Decode 分工、KV 交换、hidden 恢复，以及混部与 PD 的职责边界。</p><span class="enter">进入本篇 →</span></a><a class="card" href="hisparse-pcp.html"><div class="card-top"><span>PART 03</span><span>7 章 · 4 图</span></div><h2>HiSparse + PCP 组合设计</h2><p>在前两篇的契约上，解释 HiSparse 如何保留全局控制面、承接局部 query 和 gathered KV，及图模式、MTP、PD 的边界。</p><span class="enter">进入本篇 →</span></a><a class="card" href="pr21892-walkthrough.html"><div class="card-top"><span>PART 04 · CURRENT PR</span><span>14 张图 · 12 章 · 0cfbf72e</span></div><h2>#21892 图解设计：分支与完整时序</h2><p>12章、14张图串起初始化、两种行布局、KV通信、命中换入、Graph、MTP、保存与回收；配置默认值、混部与PD边界直接标在图中。固定0cfbf72e / Core ba15685a，源码折叠到附录。</p><span class="enter">打开当前走读 →</span></a><div class="takeaway"><strong>怎么读：</strong>第一次按 01 → 02 → 03。查缓存生命周期直接进第一篇；查 token / slot 坐标进第二篇；查适配差异、图模式和支持边界进第三篇。每篇都有自己的章节目录和前后篇入口。</div><div class="takeaway"><strong>当前 PR 图解：</strong>第04篇固定 Ascend 0cfbf72e / Core ba15685a；第01–03篇保留其各自历史版本。查当前PR分支与支持范围，以第04篇为准。</div><section class="chapter" id="versions"><h2>版本与阅读边界</h2><p>保留上一版全部 20 个章节、13 张图与 74 段固定版本源码；另补独立 PCP 走读。页面中的类图与时序图为依据源码重绘，源码默认折叠，可逐段核对。</p><div class="table-scroll"><table><thead><tr><th>范围</th><th>说明</th></tr></thead><tbody><tr><td>Core</td><td><code>24420b7a341af37a9bc3186e6fc6062512e0aa58</code></td></tr><tr><td>Ascend PCP</td><td><code>14a31903a98f2b913c8fbe2bcb02d37a544889ba</code>；基础 <code>66748c3c4ab730509e8104a201767a2add4a6f5d</code>。</td></tr><tr><td>混部 / PD</td><td>同时说明本地请求生命周期与跨引擎交付；当前 Ascend PCP adapter 拒绝 MultiConnector，不能认定 PD + HiSparse + PCP 已打通。</td></tr><tr><td>关联 PR</td><td><a href="https://github.com/vllm-project/vllm-ascend/pull/20926">基础 #20926</a> · <a href="https://github.com/vllm-project/vllm-ascend/pull/21892">官仓 PCP #21892</a> · <a href="https://github.com/zyz111222/vllm-ascend/pull/1">个人 fork PCP #1</a>。链接表示关联，不表示已合入。</td></tr></tbody></table></div></section><footer>Core <code>24420b7a341af37a9bc3186e6fc6062512e0aa58</code><br>Ascend PCP <code>14a31903a98f2b913c8fbe2bcb02d37a544889ba</code><br>依据固定源码重绘并裁剪；不代表最新 main 或现场性能结论。已做离线结构、链接与交互检查；未做截图视觉校验。<br>源码版权与许可证见各原仓库。</footer></main></div><script>
+
+.intuition-sec{margin:28px 0 34px;padding:24px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+.intuition-sec h2{margin:0 0 8px;font-size:24px}
+.intuition-lead{font-size:15px;color:var(--muted);margin:0 0 18px}
+.viz-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.viz-tab{padding:8px 14px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.viz-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.viz-stage{border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:18px}
+.viz-ctrls{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.viz-btns{display:flex;gap:8px;align-items:center}
+.viz-badge{font:12px Consolas,monospace;padding:3px 9px;border:1px solid var(--line);border-radius:3px;background:var(--paper);color:var(--muted)}
+.viz-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.viz-card{border:1px solid var(--line);border-radius:6px;padding:13px;background:var(--paper);transition:all .3s ease}
+.viz-card.on{border-color:var(--accent);background:#e3f0ef;box-shadow:0 0 0 2px rgba(35,110,119,.18)}
+.viz-card.warn{border-color:var(--warm);background:#f7ebd8}
+.viz-card.bad{border-color:#b2433a;background:#f8dfdc}
+.viz-card h4{margin:0 0 8px;font-size:14px;color:var(--ink)}
+.viz-pill{display:block;font-size:12px;line-height:1.6;padding:6px 9px;margin:5px 0;border-radius:4px;border:1px solid var(--line);background:var(--bg)}
+.viz-pill.ok{border-color:var(--accent);background:#d5ecea;color:var(--ink);font-weight:600}
+.viz-pill.hot{border-color:var(--warm);background:#f5e4c8;color:#6c4213;font-weight:600}
+.viz-pill.miss{border-color:#b2433a;background:#f4cbc7;color:#7a221b;font-weight:600}
+.lane-wrap{display:grid;gap:10px;margin-top:6px}
+.lane-row{display:grid;grid-template-columns:130px 1fr;gap:10px;align-items:center}
+.lane-label{font:12px Consolas,monospace;color:var(--ink);font-weight:700}
+.lane-track{display:flex;gap:6px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:5px;background:var(--paper);min-height:44px;overflow-x:auto}
+.blk{padding:5px 10px;border-radius:4px;font-size:12px;white-space:nowrap;border:1px solid transparent;transition:all .3s ease}
+.blk.comp{background:#d5ecea;border-color:var(--accent);color:var(--ink);font-weight:600}
+.blk.dma{background:#f5e4c8;border-color:var(--warm);color:#6c4213;font-weight:600}
+.blk.draft{background:#e6eaf8;border-color:#5c7caa;color:#223859;font-weight:600}
+.blk.wait{background:#f4cbc7;border-color:#b2433a;color:#7a221b;border-style:dashed}
+.blk.dim{opacity:.32}
+.viz-say{margin-top:14px;padding:12px 15px;border-left:4px solid var(--accent);background:var(--wash);font-size:14px;line-height:1.75;color:var(--ink)}
+</style></head><body><div id="progress" aria-hidden="true"></div><div class="layout" id="top"><aside class="rail"><div class="brand">SOURCE-VERIFIED DESIGN<br>HISPARSE / ASCEND / PCP</div><nav class="site-nav" aria-label="主题导航"><a href="index.html" aria-current="page">目录首页</a><a href="hisparse.html">01 HiSparse 总览与详细机制</a><a href="pcp.html">02 PCP 原生设计</a><a href="hisparse-pcp.html">03 HiSparse + PCP 组合设计</a><a href="pr21892-walkthrough.html">04 #21892 图解设计</a></nav><small>固定提交走读 · 2026-11-15<br>图可横向滚动或放大；源码默认折叠。<br>三篇独立阅读，页面保存在同目录即可离线浏览。</small></aside><main><header><span class="eyebrow">ARCHITECTURE / PARALLELISM / INTEGRATION</span><h1>三个主题，<br>一条完整的设计主线。</h1><p class="lede">先理解 HiSparse 如何管理和搬运 KV，再理解 PCP 如何拆分计算与组织写入，最后看两者如何组合。</p><div class="path">01 HiSparse → 02 PCP → 03 HiSparse + PCP</div></header>
+<section class="intuition-sec" id="intuition">
+  <span class="eyebrow">3 分钟直觉入门 · 不用看代码</span>
+  <h2>先用 3 个动画看懂 HiSparse 的核心直觉</h2>
+  <p class="intuition-lead">先不看类和函数，只看<strong>显存怎么省、老页怎么白嫖命中、搬运怎么藏进计算里</strong>。</p>
+
+  <div class="viz-tabs" role="tablist">
+    <button type="button" class="viz-tab active" data-viz="overview">① 整体直觉：桌面与档案室</button>
+    <button type="button" class="viz-tab" data-viz="resident">② 为什么“还给池了还能命中”？</button>
+    <button type="button" class="viz-tab" data-viz="overlap">③ 如何掩盖搬运与计算？</button>
+    <button type="button" class="viz-tab" data-viz="lru">④ 共享组一次解析与稳定 LRU</button>
+    <button type="button" class="viz-tab" data-viz="prefix">⑤ 边算边发前缀与 COW 保护</button>
+  </div>
+
+  <div class="viz-stage">
+    <div class="viz-ctrls">
+      <div class="viz-btns">
+        <button type="button" id="viz-play">▶ 自动播放</button>
+        <button type="button" id="viz-next">下一步 →</button>
+        <button type="button" id="viz-reset">重置</button>
+      </div>
+      <span class="viz-badge" id="viz-badge">1 / 4</span>
+    </div>
+    <div id="viz-canvas"></div>
+    <div class="viz-say" id="viz-say"></div>
+  </div>
+</section>
+<a class="card" href="hisparse.html"><div class="card-top"><span>PART 01</span><span>13 章 · 9 图</span></div><h2>HiSparse 总览与详细机制</h2><p>从四类缓存与类关系，到调度、执行、回收、同步和 PD 交付；先建立 HiSparse 本体的完整因果链。</p><span class="enter">进入本篇 →</span></a><a class="card" href="pcp.html"><div class="card-top"><span>PART 02</span><span>8 章 · 1 图</span></div><h2>PCP 原生设计</h2><p>关闭 HiSparse，理解 Prefill 切分、Decode 分工、KV 交换、hidden 恢复，以及混部与 PD 的职责边界。</p><span class="enter">进入本篇 →</span></a><a class="card" href="hisparse-pcp.html"><div class="card-top"><span>PART 03</span><span>7 章 · 4 图</span></div><h2>HiSparse + PCP 组合设计</h2><p>在前两篇的契约上，解释 HiSparse 如何保留全局控制面、承接局部 query 和 gathered KV，及图模式、MTP、PD 的边界。</p><span class="enter">进入本篇 →</span></a><a class="card" href="pr21892-walkthrough.html"><div class="card-top"><span>PART 04 · CURRENT PR</span><span>14 张图 · 12 章 · 0cfbf72e</span></div><h2>#21892 图解设计：分支与完整时序</h2><p>12章、14张图串起初始化、两种行布局、KV通信、命中换入、Graph、MTP、保存与回收；配置默认值、混部与PD边界直接标在图中。固定0cfbf72e / Core ba15685a，源码折叠到附录。</p><span class="enter">打开当前走读 →</span></a><div class="takeaway"><strong>怎么读：</strong>第一次按 01 → 02 → 03。查缓存生命周期直接进第一篇；查 token / slot 坐标进第二篇；查适配差异、图模式和支持边界进第三篇。每篇都有自己的章节目录和前后篇入口。</div><div class="takeaway"><strong>当前 PR 图解：</strong>第04篇固定 Ascend 0cfbf72e / Core ba15685a；第01–03篇保留其各自历史版本。查当前PR分支与支持范围，以第04篇为准。</div><section class="chapter" id="versions"><h2>版本与阅读边界</h2><p>保留上一版全部 20 个章节、13 张图与 74 段固定版本源码；另补独立 PCP 走读。页面中的类图与时序图为依据源码重绘，源码默认折叠，可逐段核对。</p><div class="table-scroll"><table><thead><tr><th>范围</th><th>说明</th></tr></thead><tbody><tr><td>Core</td><td><code>24420b7a341af37a9bc3186e6fc6062512e0aa58</code></td></tr><tr><td>Ascend PCP</td><td><code>14a31903a98f2b913c8fbe2bcb02d37a544889ba</code>；基础 <code>66748c3c4ab730509e8104a201767a2add4a6f5d</code>。</td></tr><tr><td>混部 / PD</td><td>同时说明本地请求生命周期与跨引擎交付；当前 Ascend PCP adapter 拒绝 MultiConnector，不能认定 PD + HiSparse + PCP 已打通。</td></tr><tr><td>关联 PR</td><td><a href="https://github.com/vllm-project/vllm-ascend/pull/20926">基础 #20926</a> · <a href="https://github.com/vllm-project/vllm-ascend/pull/21892">官仓 PCP #21892</a> · <a href="https://github.com/zyz111222/vllm-ascend/pull/1">个人 fork PCP #1</a>。链接表示关联，不表示已合入。</td></tr></tbody></table></div></section><footer>Core <code>24420b7a341af37a9bc3186e6fc6062512e0aa58</code><br>Ascend PCP <code>14a31903a98f2b913c8fbe2bcb02d37a544889ba</code><br>依据固定源码重绘并裁剪；不代表最新 main 或现场性能结论。已做离线结构、链接与交互检查；未做截图视觉校验。<br>源码版权与许可证见各原仓库。</footer></main></div><script>
 const toggle=document.getElementById('toggle-evidence');
 if(toggle)toggle.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expanded')!=='true';document.querySelectorAll('details.evidence').forEach(x=>x.open=open);toggle.setAttribute('aria-expanded',String(open));toggle.textContent=open?'折叠全部源码':'展开全部源码';});
 document.getElementById('print-page')?.addEventListener('click',()=>window.print());
@@ -18,4 +77,210 @@ const links=[...document.querySelectorAll('.toc a')];
 const observer=new IntersectionObserver(entries=>{for(const e of entries)if(e.isIntersecting)links.forEach(a=>a.classList.toggle('active',a.hash==='#'+e.target.id));},{rootMargin:'-5% 0px -80% 0px'});
 document.querySelectorAll('.chapter').forEach(s=>observer.observe(s));
 window.addEventListener('scroll',()=>{const total=document.documentElement.scrollHeight-innerHeight;document.getElementById('progress').style.width=(total>0?scrollY/total*100:0)+'%';},{passive:true});
+
+// =========================================================================
+// 首页 3 个直觉动画控制器（整体流程 / Resident 延迟失效 / 多流重叠掩盖）
+// =========================================================================
+(() => {
+  const SCENES = {
+    overview: [
+      {
+        html: () => `
+          <div class="viz-grid">
+            <div class="viz-card on"><h4>🖥️ NPU 显存（办公桌：小但极快）</h4><div class="viz-pill ok">Resident（驻留区）：刚写完的第 0, 1, 2 页</div><div class="viz-pill">Hot（便签区）：暂时空着</div></div>
+            <div class="viz-card"><h4>🗄️ CPU 内存（档案室：大但慢）</h4><div class="viz-pill">Host Source：后台正在异步抄送副本...</div></div>
+          </div>`,
+        say: '第 1 步（写桌面 + 抄送档案室）：Prefill 算出的新 KV 直接写在 NPU 显存（Resident），同时后台通过 DMA 悄悄往 CPU 内存（Host）抄送一份永久备份。'
+      },
+      {
+        html: () => `
+          <div class="viz-grid">
+            <div class="viz-card warn"><h4>🖥️ NPU 显存快满了：腾出老页</h4><div class="viz-pill">第 0 页已经抄送完成 → 标记为“可回收”</div><div class="viz-pill ok">第 1, 2 页继续留在桌上</div></div>
+            <div class="viz-card on"><h4>🗄️ CPU 档案室已存稳</h4><div class="viz-pill ok">第 0, 1, 2 页都有完整历史备份</div></div>
+          </div>`,
+        say: '第 2 步（桌面腾空间）：当档案室确认备份写稳后，桌上的老页（第 0 页）就可以把“占用锁”解开，让新请求能随时复用这块显存。'
+      },
+      {
+        html: () => `
+          <div class="viz-grid">
+            <div class="viz-card on"><h4>🔍 Indexer 挑出最相关的 Top-K 行</h4><div class="viz-pill ok">选中的行大多在第 1, 2 页（桌上还有！）</div><div class="viz-pill hot">只有第 0 页的 3 行不在桌上 → 从档案室搬进 Hot 便签区</div></div>
+            <div class="viz-card on"><h4>🗄️ CPU 档案室按行供货</h4><div class="viz-pill hot">不搬整页 128 行，只搬挑中的那 3 行！</div></div>
+          </div>`,
+        say: '第 3 步（稀疏按行换入）：Decode 时不需要把整页 128 行都搬回 NPU！只把“桌面丢了、但 Indexer 又选中了”的少数几行，从 CPU 搬到 NPU 的 Hot 便签区。'
+      },
+      {
+        html: () => `
+          <div class="viz-grid">
+            <div class="viz-card on"><h4>⚡ 一次算完（Resident + Hot 同池共读）</h4><div class="viz-pill ok">Resident 物理行（第 1, 2 页原地直读）</div><div class="viz-pill hot">Hot 物理行（刚搬来的 3 行）</div></div>
+            <div class="viz-card on"><h4>🎯 最终效果</h4><div class="viz-pill ok">省下大量 NPU 显存，又几乎不牺牲吞吐</div></div>
+          </div>`,
+        say: '第 4 步（同池共读）：因为 Resident 和 Hot 都在同一块 NPU 物理池里，注意力算子一次就能同时读完“桌面上的整页 + 便签区里的稀疏行”，不用再搬来搬去。'
+      }
+    ],
+    resident: [
+      {
+        html: () => `
+          <div class="viz-grid">
+            <div class="viz-card on"><h4>🏨 房间 101（NPU 物理块）</h4><div class="viz-pill ok">住户：请求 A 的第 0 页 KV 数据</div><div class="viz-pill">状态：Pinned（锁门占用中）</div></div>
+            <div class="viz-card"><h4>🛎️ 前台账本（BlockPool）</h4><div class="viz-pill">可用空房数：0</div></div>
+          </div>`,
+        say: '第 1 步（占用中）：请求 A 的第 0 页住在 101 房，此时 Host 备份还没写完，房门锁死，前台不能把 101 房分给别人。'
+      },
+      {
+        html: () => `
+          <div class="viz-grid">
+            <div class="viz-card warn"><h4>🏨 房间 101（Unpin：退房但不清扫）</h4><div class="viz-pill ok">房里依然完整保留着请求 A 的 KV 数据！</div><div class="viz-pill hot">只是把钥匙还给了前台</div></div>
+            <div class="viz-card on"><h4>🛎️ 前台账本（BlockPool）</h4><div class="viz-pill ok">可用空房数：+1（随时可分配给新客人）</div></div>
+          </div>`,
+        say: '第 2 步（关键设计：还钥匙但不清房！）：Host 备份写完后，Coordinator 对 101 房执行 Unpin。显存池认为它“空闲了”，但其实数据还在原地没动！'
+      },
+      {
+        html: () => `
+          <div class="viz-grid">
+            <div class="viz-card on"><h4>🏨 房间 101（只要没人新入住，继续白嫖！）</h4><div class="viz-pill ok">请求 A 回来 Decode：101 房还是我的原数据 → 直接命中 Resident！</div></div>
+            <div class="viz-card"><h4>⚡ 收益</h4><div class="viz-pill ok">零拷贝、零 Host 访问，完全白嫖 NPU 命中！</div></div>
+          </div>`,
+        say: '第 3 步（为什么归还了还算命中？）：只要没有新请求真的住进 101 房，请求 A 就继续把它当 Resident 命中来读！这就是“可回收”与“真正失效”分离的威力。'
+      },
+      {
+        html: () => `
+          <div class="viz-grid">
+            <div class="viz-card bad"><h4>🏨 房间 101（新请求 B 真正入住覆盖）</h4><div class="viz-pill miss">触发回调：把 101 房从请求 A 的 Resident 表抹除</div></div>
+            <div class="viz-card on"><h4>🛎️ 通知 Worker（residency_updates）</h4><div class="viz-pill hot">以后请求 A 再查第 0 页，才改从 Host 搬到 Hot</div></div>
+          </div>`,
+        say: '第 4 步（真正失效）：直到新请求 B 真的被分到了 101 房，BlockPool 才触发回调通知请求 A“这页易主了”。请求 A 从下一轮起才改走 Host → Hot。'
+      }
+    ],
+    overlap: [
+      {
+        html: () => `
+          <div class="lane-wrap">
+            <div class="lane-row"><div class="lane-label">❌ 传统串行</div><div class="lane-track"><span class="blk dma">搬第0层冷行</span><span class="blk comp">算第0层</span><span class="blk dma">搬第1层冷行</span><span class="blk comp">算第1层</span></div></div>
+            <div class="lane-row"><div class="lane-label">✅ HiSparse 双流</div><div class="lane-track"><span class="blk comp">ComputeStream: 算第 0 层</span><span class="blk dma">CopyStream: 提前搬第 1 层冷行（并行！）</span></div></div>
+          </div>`,
+        say: '第 1 步（H2D 搬运与计算重叠）：传统做法是“搬完再算、算完再搬”；HiSparse 用两条独立流，计算流在算当前层时，搬运流已经在后台预取下一层。'
+      },
+      {
+        html: () => `
+          <div class="lane-wrap">
+            <div class="lane-row"><div class="lane-label">Group Leader</div><div class="lane-track"><span class="blk dma">一次解析全组地址 (resolve_residency)</span><span class="blk dma">批量触发 Follower 搬运</span></div></div>
+            <div class="lane-row"><div class="lane-label">Follower 各层</div><div class="lane-track"><span class="blk comp">只需极短 wait_event → 直接算 SFA</span></div></div>
+          </div>`,
+        say: '第 2 步（共享组一次解析 + 批量预取）：同一 Index Group 里的多层共享相同的 TopK，因此只由 Leader 解析一次地址，然后直接把后面几层的搬运全排进 CopyStream。'
+      },
+      {
+        html: () => `
+          <div class="lane-wrap">
+            <div class="lane-row"><div class="lane-label">ComputeStream</div><div class="lane-track"><span class="blk comp">Target 前向写 KV</span><span class="blk draft">不等落盘！直接继续算 Draft 投机层</span></div></div>
+            <div class="lane-row"><div class="lane-label">DMA / OutputStream</div><div class="lane-track"><span class="blk dim">Target 前向</span><span class="blk dma">D2H 异步写回 Host（藏在 Draft 期间完成）</span></div></div>
+          </div>`,
+        say: '第 3 步（D2H 写回与 Draft 重叠 · HostMirrorConnector）：纯 Decode 时，Target 写完 KV 发起异步 D2H 拷贝，计算流不等拷贝结束，立刻继续跑 Draft 草稿层！'
+      },
+      {
+        html: () => `
+          <div class="lane-wrap">
+            <div class="lane-row"><div class="lane-label">ComputeStream</div><div class="lane-track"><span class="blk comp">Target</span><span class="blk draft">Draft 计算</span><span class="blk comp">join_pending（此时 DMA 早已完成）</span></div></div>
+            <div class="lane-row"><div class="lane-label">收益总结</div><div class="lane-track"><span class="blk comp">H2D 预取藏在层间计算里</span><span class="blk draft">D2H 落盘藏在 Draft 计算里</span></div></div>
+          </div>`,
+        say: '第 4 步（收尾零等待）：等 Draft 算完再在 finalize_step 做最后一次同步确认时，Host 写回早就完成了。两条关键路径（H2D 与 D2H）的搬运开销都被计算彻底掩盖。'
+      }
+    ],
+    lru: [
+      {
+        html: () => `
+          <div class="viz-grid">
+            <div class="viz-card on"><h4>🧠 Index Group 共享（如 1 Leader + 3 Follower）</h4><div class="viz-pill ok">4 层共用同一份 Indexer TopK 索引</div><div class="viz-pill">只需要 Leader 调用 1 次 resolve_residency！</div></div>
+            <div class="viz-card"><h4>❌ 如果每层各算各的</h4><div class="viz-pill miss">4 倍地址解析开销 + 4 份重复 LRU 状态</div></div>
+          </div>`,
+        say: '第 1 步（共享组一次解析）：像 GLM-5.3 这类模型多层共享同一个 Indexer。HiSparse 把它们编成 Index Group，只让 Leader 解析一次地址，Follower 直接复用同一份 Hot 槽位与淘汰结果。'
+      },
+      {
+        html: () => `
+          <div class="viz-grid">
+            <div class="viz-card on"><h4>🛡️ 先保护全部命中，再选淘汰槽位</h4><div class="viz-pill ok">本步 TopK 命中 Hot 槽 1 → 原子标记 kHit 锁定</div><div class="viz-pill hot">先统计去重后的 Miss 数，装不下直接整体退出不破坏 LRU</div></div>
+          </div>`,
+        say: '第 2 步（防“自相残杀”的保护机制）：如果边找空位边淘汰，可能把本步后面还要用的 Hot 槽位给顶掉！因此 Kernel 先扫一遍保护所有命中，再统计总 Miss 数确认容量够用。'
+      },
+      {
+        html: () => `
+          <div class="viz-grid">
+            <div class="viz-card on"><h4>🔄 稳定 LRU 重排</h4><div class="viz-pill ok">命中的槽位前移到 MRU（最安全端）</div><div class="viz-pill">未命中的槽位保持原相对顺序，最老的排到最右端被淘汰</div></div>
+          </div>`,
+        say: '第 3 步（稳定 LRU）：NPU 并行重排时保持未命中槽位的相对顺序不变，淘汰最老槽位并填入新搬来的 Host 行，避免稀疏访问抖动导致反复换入换出。'
+      }
+    ],
+    prefix: [
+      {
+        html: () => `
+          <div class="viz-grid">
+            <div class="viz-card on"><h4>📦 长 Prefill 分块边算边落盘</h4><div class="viz-pill ok">Page 0, 1 D2H 写完 → 立刻 publish_blocks 发布前缀哈希</div><div class="viz-pill">Page 2, 3 还在继续算、继续写...</div></div>
+            <div class="viz-card"><h4>💡 为什么不等整条结束？</h4><div class="viz-pill hot">万一半途被抢占，已落盘的 Page 0, 1 依然能被后续直接复用！</div></div>
+          </div>`,
+        say: '第 1 步（按页耐久发布）：长文本 Prefill 往往要跑很多步。HiSparse 不等整条请求算完，只要连续前缀页（ready_prefix_pages）确认写稳到 CPU Host，就立刻发布前缀缓存。'
+      },
+      {
+        html: () => `
+          <div class="viz-grid">
+            <div class="viz-card warn"><h4>📝 Host 写时拷贝（COW）防踩踏</h4><div class="viz-pill hot">新请求复用共享前缀的最后一页（未满页）并继续追加写</div><div class="viz-pill ok">Coordinator 生成 Host COW 任务，拷贝到新块后再写</div></div>
+            <div class="viz-card on"><h4>🔒 租约保活（detached_blocks）</h4><div class="viz-pill ok">请求结束时若还有在途 D2H，先保住块租约等写完再释放</div></div>
+          </div>`,
+        say: '第 2 步（COW 与生命周期闭环）：当多个请求共享同一前缀并修改未满尾页时，先在 Host 池做 COW 拷贝保护旧前缀；请求结束时若有在途 DMA，也通过租约保活防提前覆盖。'
+      }
+    ]
+  };
+
+  let curScene = 'overview';
+  let curStep = 0;
+  let timer = null;
+
+  const canvas = document.getElementById('viz-canvas');
+  const say = document.getElementById('viz-say');
+  const badge = document.getElementById('viz-badge');
+  const playBtn = document.getElementById('viz-play');
+
+  function draw() {
+    const list = SCENES[curScene];
+    const item = list[curStep];
+    canvas.innerHTML = item.html();
+    say.textContent = item.say;
+    badge.textContent = `${curStep + 1} / ${list.length}`;
+    document.querySelectorAll('.viz-tab').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.viz === curScene);
+    });
+  }
+
+  function stop() {
+    if (timer) { clearInterval(timer); timer = null; }
+    playBtn.textContent = '▶ 自动播放';
+  }
+
+  playBtn.addEventListener('click', () => {
+    if (timer) return stop();
+    playBtn.textContent = '⏸ 暂停';
+    timer = setInterval(() => { curStep = (curStep + 1) % SCENES[curScene].length; draw(); }, 2800);
+  });
+
+  document.getElementById('viz-next').addEventListener('click', () => {
+    stop();
+    curStep = (curStep + 1) % SCENES[curScene].length;
+    draw();
+  });
+
+  document.getElementById('viz-reset').addEventListener('click', () => {
+    stop();
+    curStep = 0;
+    draw();
+  });
+
+  document.querySelectorAll('.viz-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      stop();
+      curScene = btn.dataset.viz;
+      curStep = 0;
+      draw();
+    });
+  });
+
+  draw();
+})();
 </script></body></html>
