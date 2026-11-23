@@ -10,63 +10,32 @@
 @media(max-width:600px){.rail .toc{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:22px 18px}.card h2{font-size:25px}.page-turn a{padding:14px 12px}.card-top{letter-spacing:0}.example{font-size:12px}}
 @media print{.page-turn{display:none}}
 
-.intuition-sec{margin:28px 0 34px;padding:24px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
-.intuition-sec h2{margin:0 0 8px;font-size:24px}
-.intuition-lead{font-size:15px;color:var(--muted);margin:0 0 18px}
-.viz-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
-.viz-tab{padding:8px 14px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
-.viz-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-.viz-stage{border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:18px}
-.viz-ctrls{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
-.viz-btns{display:flex;gap:8px;align-items:center}
-.viz-badge{font:12px Consolas,monospace;padding:3px 9px;border:1px solid var(--line);border-radius:3px;background:var(--paper);color:var(--muted)}
-.viz-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-.viz-card{border:1px solid var(--line);border-radius:6px;padding:13px;background:var(--paper);transition:all .3s ease}
-.viz-card.on{border-color:var(--accent);background:#e3f0ef;box-shadow:0 0 0 2px rgba(35,110,119,.18)}
-.viz-card.warn{border-color:var(--warm);background:#f7ebd8}
-.viz-card.bad{border-color:#b2433a;background:#f8dfdc}
-.viz-card h4{margin:0 0 8px;font-size:14px;color:var(--ink)}
-.viz-pill{display:block;font-size:12px;line-height:1.6;padding:6px 9px;margin:5px 0;border-radius:4px;border:1px solid var(--line);background:var(--bg)}
-.viz-pill.ok{border-color:var(--accent);background:#d5ecea;color:var(--ink);font-weight:600}
-.viz-pill.hot{border-color:var(--warm);background:#f5e4c8;color:#6c4213;font-weight:600}
-.viz-pill.miss{border-color:#b2433a;background:#f4cbc7;color:#7a221b;font-weight:600}
-.lane-wrap{display:grid;gap:10px;margin-top:6px}
-.lane-row{display:grid;grid-template-columns:130px 1fr;gap:10px;align-items:center}
-.lane-label{font:12px Consolas,monospace;color:var(--ink);font-weight:700}
-.lane-track{display:flex;gap:6px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:5px;background:var(--paper);min-height:44px;overflow-x:auto}
-.blk{padding:5px 10px;border-radius:4px;font-size:12px;white-space:nowrap;border:1px solid transparent;transition:all .3s ease}
-.blk.comp{background:#d5ecea;border-color:var(--accent);color:var(--ink);font-weight:600}
-.blk.dma{background:#f5e4c8;border-color:var(--warm);color:#6c4213;font-weight:600}
-.blk.draft{background:#e6eaf8;border-color:#5c7caa;color:#223859;font-weight:600}
-.blk.wait{background:#f4cbc7;border-color:#b2433a;color:#7a221b;border-style:dashed}
-.blk.dim{opacity:.32}
-.viz-say{margin-top:14px;padding:12px 15px;border-left:4px solid var(--accent);background:var(--wash);font-size:14px;line-height:1.75;color:var(--ink)}
+.intuition-sec{margin:26px 0 32px;padding:20px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+.intuition-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.intuition-head h2{margin:0;font-size:22px}
+.viz-btns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.viz-badge{font:12px Consolas,monospace;padding:3px 9px;border:1px solid var(--line);border-radius:3px;background:var(--bg);color:var(--ink)}
+.viz-svg-wrap{border:1px solid var(--line);border-radius:6px;background:var(--bg);overflow-x:auto;padding:8px}
+.viz-svg-wrap svg{display:block;width:100%;min-width:860px;height:auto;font-family:"Microsoft YaHei",Consolas,sans-serif}
+@keyframes flowDash{to{stroke-dashoffset:-24}}
+.flow-on{stroke-dasharray:7 5;animation:flowDash .8s linear infinite}
+.step-dots{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.step-dot{font:12px Consolas,"Microsoft YaHei",sans-serif;padding:5px 10px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--muted);cursor:pointer}
+.step-dot.active{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
 </style></head><body><div id="progress" aria-hidden="true"></div><div class="layout" id="top"><aside class="rail"><div class="brand">SOURCE-VERIFIED DESIGN<br>HISPARSE / ASCEND / PCP</div><nav class="site-nav" aria-label="主题导航"><a href="index.html" aria-current="page">目录首页</a><a href="hisparse.html">01 HiSparse 总览与详细机制</a><a href="pcp.html">02 PCP 原生设计</a><a href="hisparse-pcp.html">03 HiSparse + PCP 组合设计</a><a href="pr21892-walkthrough.html">04 #21892 图解设计</a></nav><small>固定提交走读 · 2026-11-15<br>图可横向滚动或放大；源码默认折叠。<br>三篇独立阅读，页面保存在同目录即可离线浏览。</small></aside><main><header><span class="eyebrow">ARCHITECTURE / PARALLELISM / INTEGRATION</span><h1>三个主题，<br>一条完整的设计主线。</h1><p class="lede">先理解 HiSparse 如何管理和搬运 KV，再理解 PCP 如何拆分计算与组织写入，最后看两者如何组合。</p><div class="path">01 HiSparse → 02 PCP → 03 HiSparse + PCP</div></header>
 <section class="intuition-sec" id="intuition">
-  <span class="eyebrow">核心机制速览 · 事实与数据流</span>
-  <h2>先用 5 个动画看清 HiSparse 的关键设计</h2>
-  <p class="intuition-lead">直接按真实数据流看清<strong>四类缓存分工、Resident 延迟失效、多流掩盖搬运、稳定 LRU 与前缀发布/COW</strong>。</p>
-
-  <div class="viz-tabs" role="tablist">
-    <button type="button" class="viz-tab active" data-viz="overview">① 整体数据流：NPU 与 Host 分工</button>
-    <button type="button" class="viz-tab" data-viz="resident">② Resident 延迟失效（Unpin ≠ 失效）</button>
-    <button type="button" class="viz-tab" data-viz="overlap">③ 多流掩盖搬运与计算</button>
-    <button type="button" class="viz-tab" data-viz="lru">④ 共享组一次解析与稳定 LRU</button>
-    <button type="button" class="viz-tab" data-viz="prefix">⑤ 边算边发前缀与 COW 保护</button>
-  </div>
-
-  <div class="viz-stage">
-    <div class="viz-ctrls">
-      <div class="viz-btns">
-        <button type="button" id="viz-play">▶ 自动播放</button>
-        <button type="button" id="viz-next">下一步 →</button>
-        <button type="button" id="viz-reset">重置</button>
-      </div>
-      <span class="viz-badge" id="viz-badge">1 / 4</span>
+  <div class="intuition-head">
+    <h2>单请求全流程动画：写入 · 镜像 · Unpin 复用 · 覆盖换入 · 通算掩盖</h2>
+    <div class="viz-btns">
+      <button type="button" id="viz-play">▶ 播放</button>
+      <button type="button" id="viz-prev">← 上一步</button>
+      <button type="button" id="viz-next">下一步 →</button>
+      <button type="button" id="viz-reset">重置</button>
+      <span class="viz-badge" id="viz-badge">1 / 6</span>
     </div>
-    <div id="viz-canvas"></div>
-    <div class="viz-say" id="viz-say"></div>
   </div>
+  <div class="viz-svg-wrap" id="viz-canvas"></div>
+  <div class="step-dots" id="viz-dots"></div>
 </section>
 <a class="card" href="hisparse.html"><div class="card-top"><span>PART 01</span><span>13 章 · 9 图</span></div><h2>HiSparse 总览与详细机制</h2><p>从四类缓存与类关系，到调度、执行、回收、同步和 PD 交付；先建立 HiSparse 本体的完整因果链。</p><span class="enter">进入本篇 →</span></a><a class="card" href="pcp.html"><div class="card-top"><span>PART 02</span><span>8 章 · 1 图</span></div><h2>PCP 原生设计</h2><p>关闭 HiSparse，理解 Prefill 切分、Decode 分工、KV 交换、hidden 恢复，以及混部与 PD 的职责边界。</p><span class="enter">进入本篇 →</span></a><a class="card" href="hisparse-pcp.html"><div class="card-top"><span>PART 03</span><span>7 章 · 4 图</span></div><h2>HiSparse + PCP 组合设计</h2><p>在前两篇的契约上，解释 HiSparse 如何保留全局控制面、承接局部 query 和 gathered KV，及图模式、MTP、PD 的边界。</p><span class="enter">进入本篇 →</span></a><a class="card" href="pr21892-walkthrough.html"><div class="card-top"><span>PART 04 · CURRENT PR</span><span>14 张图 · 12 章 · 0cfbf72e</span></div><h2>#21892 图解设计：分支与完整时序</h2><p>12章、14张图串起初始化、两种行布局、KV通信、命中换入、Graph、MTP、保存与回收；配置默认值、混部与PD边界直接标在图中。固定0cfbf72e / Core ba15685a，源码折叠到附录。</p><span class="enter">打开当前走读 →</span></a><div class="takeaway"><strong>怎么读：</strong>第一次按 01 → 02 → 03。查缓存生命周期直接进第一篇；查 token / slot 坐标进第二篇；查适配差异、图模式和支持边界进第三篇。每篇都有自己的章节目录和前后篇入口。</div><div class="takeaway"><strong>当前 PR 图解：</strong>第04篇固定 Ascend 0cfbf72e / Core ba15685a；第01–03篇保留其各自历史版本。查当前PR分支与支持范围，以第04篇为准。</div><section class="chapter" id="versions"><h2>版本与阅读边界</h2><p>保留上一版全部 20 个章节、13 张图与 74 段固定版本源码；另补独立 PCP 走读。页面中的类图与时序图为依据源码重绘，源码默认折叠，可逐段核对。</p><div class="table-scroll"><table><thead><tr><th>范围</th><th>说明</th></tr></thead><tbody><tr><td>Core</td><td><code>24420b7a341af37a9bc3186e6fc6062512e0aa58</code></td></tr><tr><td>Ascend PCP</td><td><code>14a31903a98f2b913c8fbe2bcb02d37a544889ba</code>；基础 <code>66748c3c4ab730509e8104a201767a2add4a6f5d</code>。</td></tr><tr><td>混部 / PD</td><td>同时说明本地请求生命周期与跨引擎交付；当前 Ascend PCP adapter 拒绝 MultiConnector，不能认定 PD + HiSparse + PCP 已打通。</td></tr><tr><td>关联 PR</td><td><a href="https://github.com/vllm-project/vllm-ascend/pull/20926">基础 #20926</a> · <a href="https://github.com/vllm-project/vllm-ascend/pull/21892">官仓 PCP #21892</a> · <a href="https://github.com/zyz111222/vllm-ascend/pull/1">个人 fork PCP #1</a>。链接表示关联，不表示已合入。</td></tr></tbody></table></div></section><footer>Core <code>24420b7a341af37a9bc3186e6fc6062512e0aa58</code><br>Ascend PCP <code>14a31903a98f2b913c8fbe2bcb02d37a544889ba</code><br>依据固定源码重绘并裁剪；不代表最新 main 或现场性能结论。已做离线结构、链接与交互检查；未做截图视觉校验。<br>源码版权与许可证见各原仓库。</footer></main></div><script>
 const toggle=document.getElementById('toggle-evidence');
@@ -78,208 +47,140 @@ const observer=new IntersectionObserver(entries=>{for(const e of entries)if(e.is
 document.querySelectorAll('.chapter').forEach(s=>observer.observe(s));
 window.addEventListener('scroll',()=>{const total=document.documentElement.scrollHeight-innerHeight;document.getElementById('progress').style.width=(total>0?scrollY/total*100:0)+'%';},{passive:true});
 
-// =========================================================================
-// 首页 3 个直觉动画控制器（整体流程 / Resident 延迟失效 / 多流重叠掩盖）
-// =========================================================================
+// 首页单请求全流程 SVG 动画控制器（6 步统一展示搬运、释放、覆盖与掩盖）
 (() => {
-  const SCENES = {
-    overview: [
-      {
-        html: () => `
-          <div class="viz-grid">
-            <div class="viz-card on"><h4>NPU HBM（共享设备池）</h4><div class="viz-pill ok">Resident：当前写入的 Page 0, 1, 2</div><div class="viz-pill">Hot：按 blocks_per_request 预留，暂未换入</div></div>
-            <div class="viz-card"><h4>CPU DRAM（私有 HostPool）</h4><div class="viz-pill">Host Source：后台 copy_stream 正在异步 D2H 镜像</div></div>
-          </div>`,
-        say: '第 1 步（Prefill 写入 + D2H 镜像）：Prefill 计算出的新 KV 直接写入 NPU Resident 页；同时在后台发起异步 D2H 逐行镜像到 CPU Host Source。'
-      },
-      {
-        html: () => `
-          <div class="viz-grid">
-            <div class="viz-card warn"><h4>NPU HBM（释放旧页引用）</h4><div class="viz-pill">Page 0 D2H 完成 → Coordinator 执行 unpin_blocks</div><div class="viz-pill ok">Page 1, 2 仍保留在 Resident</div></div>
-            <div class="viz-card on"><h4>CPU DRAM（Host Source 耐久）</h4><div class="viz-pill ok">Page 0, 1, 2 均已标记 valid_pages</div></div>
-          </div>`,
-        say: '第 2 步（写回完成与可回收）：当 Host 副本确认落盘（valid_pages）且请求具备 Hot 能力后，老页（Page 0）的池引用计数被释放，显存池可将其重新分配给后续请求。'
-      },
-      {
-        html: () => `
-          <div class="viz-grid">
-            <div class="viz-card on"><h4>Indexer 选出 Top-K 逻辑索引</h4><div class="viz-pill ok">命中 Page 1, 2 的 token → 直接读 Resident 物理行</div><div class="viz-pill hot">Page 0 已被覆盖 → 只把选中的 3 行 H2D 搬入 Hot</div></div>
-            <div class="viz-card on"><h4>CPU DRAM（按行稀疏读取）</h4><div class="viz-pill hot">hisparse_gather_compact：仅读取 Miss 的 3 行，不搬整页</div></div>
-          </div>`,
-        say: '第 3 步（Decode 按行稀疏换入）：Decode 时不需要整页（128 行）恢复；仅对 Resident 未命中且被 Top-K 选中的冷行，从 Host 按行 gather 进 NPU Hot 缓冲区。'
-      },
-      {
-        html: () => `
-          <div class="viz-grid">
-            <div class="viz-card on"><h4>Resident + Hot 共享同一设备 backing</h4><div class="viz-pill ok">Resident 物理行（Page 1, 2）</div><div class="viz-pill hot">Hot 物理行（来自 Page 0 的 3 行）</div></div>
-            <div class="viz-card on"><h4>Sparse Attention (SFA)</h4><div class="viz-pill ok">一次内核调用读取统一物理行索引数组</div></div>
-          </div>`,
-        say: '第 4 步（统一物理寻址计算）：Resident 与 Hot 共享同一块 NPU 物理显存 backing，解析出的物理行号数组直接送入 SFA 算子，一次读取完成计算。'
-      }
-    ],
-    resident: [
-      {
-        html: () => `
-          <div class="viz-grid">
-            <div class="viz-card on"><h4>NPU 物理块 Block 101</h4><div class="viz-pill ok">内容：请求 A 的 Page 0 KV 数据</div><div class="viz-pill">状态：Dirty / Pinned（引用计数 = 1，不可回收）</div></div>
-            <div class="viz-card"><h4>BlockPool 分配器</h4><div class="viz-pill">free_blocks 未计入 Block 101</div></div>
-          </div>`,
-        say: '第 1 步（Dirty / Pinned）：请求 A 的 Page 0 刚写入 Block 101，Host 镜像尚未完成，BlockPool 引用计数为 1，绝对不可被覆盖。'
-      },
-      {
-        html: () => `
-          <div class="viz-grid">
-            <div class="viz-card warn"><h4>NPU 物理块 Block 101（Unpin，不清数据）</h4><div class="viz-pill ok">显存上的 KV 字节数据原封不动保留！</div><div class="viz-pill hot">Coordinator 仅执行 unpin_blocks 释放引用计数</div></div>
-            <div class="viz-card on"><h4>BlockPool 分配器</h4><div class="viz-pill ok">free_blocks +1（Block 101 进入可分配队列，挂上 _on_block_reused 回调）</div></div>
-          </div>`,
-        say: '第 2 步（Unpin ≠ 失效）：Host 写回完成后，Coordinator 调用 unpin_blocks 释放引用计数并登记回调，但并不抹除块内容，也不通知 Worker 失效。'
-      },
-      {
-        html: () => `
-          <div class="viz-grid">
-            <div class="viz-card on"><h4>Block 101 尚未被新请求分配走</h4><div class="viz-pill ok">请求 A 下一轮 Decode：设备端 residency 表仍指向 Block 101 → 直接命中 Resident</div></div>
-            <div class="viz-card"><h4>实际效果</h4><div class="viz-pill ok">零 H2D 拷贝、零 Host 内存访问，直接复用 NPU 数据</div></div>
-          </div>`,
-        say: '第 3 步（延迟失效窗口）：只要 BlockPool 还没把 Block 101 分配给新请求，请求 A 的设备端 residency 表就一直有效，继续直接命中 Resident。'
-      },
-      {
-        html: () => `
-          <div class="viz-grid">
-            <div class="viz-card bad"><h4>Block 101 被新请求 B 分配覆盖</h4><div class="viz-pill miss">BlockPool 触发 _on_block_reused → _lose_page</div></div>
-            <div class="viz-card on"><h4>下发 residency_updates</h4><div class="viz-pill hot">start_step 更新设备端 residency 表置为无效，后续访问改走 Host → Hot</div></div>
-          </div>`,
-        say: '第 4 步（真正失效）：直到新请求 B 实际分配到 Block 101，回调 _on_block_reused 才执行 _lose_page 标记该页失效，并通过 residency_updates 同步给 Worker。'
-      }
-    ],
-    overlap: [
-      {
-        html: () => `
-          <div class="lane-wrap">
-            <div class="lane-row"><div class="lane-label">❌ 传统串行</div><div class="lane-track"><span class="blk dma">搬第0层冷行</span><span class="blk comp">算第0层</span><span class="blk dma">搬第1层冷行</span><span class="blk comp">算第1层</span></div></div>
-            <div class="lane-row"><div class="lane-label">✅ HiSparse 双流</div><div class="lane-track"><span class="blk comp">ComputeStream: 算第 0 层</span><span class="blk dma">CopyStream: 提前搬第 1 层冷行（并行！）</span></div></div>
-          </div>`,
-        say: '第 1 步（H2D 搬运与计算重叠）：传统做法是“搬完再算、算完再搬”；HiSparse 用两条独立流，计算流在算当前层时，搬运流已经在后台预取下一层。'
-      },
-      {
-        html: () => `
-          <div class="lane-wrap">
-            <div class="lane-row"><div class="lane-label">Group Leader</div><div class="lane-track"><span class="blk dma">一次解析全组地址 (resolve_residency)</span><span class="blk dma">批量触发 Follower 搬运</span></div></div>
-            <div class="lane-row"><div class="lane-label">Follower 各层</div><div class="lane-track"><span class="blk comp">只需极短 wait_event → 直接算 SFA</span></div></div>
-          </div>`,
-        say: '第 2 步（共享组一次解析 + 批量预取）：同一 Index Group 里的多层共享相同的 TopK，因此只由 Leader 解析一次地址，然后直接把后面几层的搬运全排进 CopyStream。'
-      },
-      {
-        html: () => `
-          <div class="lane-wrap">
-            <div class="lane-row"><div class="lane-label">ComputeStream</div><div class="lane-track"><span class="blk comp">Target 前向写 KV</span><span class="blk draft">不等落盘！直接继续算 Draft 投机层</span></div></div>
-            <div class="lane-row"><div class="lane-label">DMA / OutputStream</div><div class="lane-track"><span class="blk dim">Target 前向</span><span class="blk dma">D2H 异步写回 Host（藏在 Draft 期间完成）</span></div></div>
-          </div>`,
-        say: '第 3 步（D2H 写回与 Draft 重叠 · HostMirrorConnector）：纯 Decode 时，Target 写完 KV 发起异步 D2H 拷贝，计算流不等拷贝结束，立刻继续跑 Draft 草稿层！'
-      },
-      {
-        html: () => `
-          <div class="lane-wrap">
-            <div class="lane-row"><div class="lane-label">ComputeStream</div><div class="lane-track"><span class="blk comp">Target</span><span class="blk draft">Draft 计算</span><span class="blk comp">join_pending（此时 DMA 早已完成）</span></div></div>
-            <div class="lane-row"><div class="lane-label">收益总结</div><div class="lane-track"><span class="blk comp">H2D 预取藏在层间计算里</span><span class="blk draft">D2H 落盘藏在 Draft 计算里</span></div></div>
-          </div>`,
-        say: '第 4 步（收尾零等待）：等 Draft 算完再在 finalize_step 做最后一次同步确认时，Host 写回早就完成了。两条关键路径（H2D 与 D2H）的搬运开销都被计算彻底掩盖。'
-      }
-    ],
-    lru: [
-      {
-        html: () => `
-          <div class="viz-grid">
-            <div class="viz-card on"><h4>🧠 Index Group 共享（如 1 Leader + 3 Follower）</h4><div class="viz-pill ok">4 层共用同一份 Indexer TopK 索引</div><div class="viz-pill">只需要 Leader 调用 1 次 resolve_residency！</div></div>
-            <div class="viz-card"><h4>❌ 如果每层各算各的</h4><div class="viz-pill miss">4 倍地址解析开销 + 4 份重复 LRU 状态</div></div>
-          </div>`,
-        say: '第 1 步（共享组一次解析）：像 GLM-5.3 这类模型多层共享同一个 Indexer。HiSparse 把它们编成 Index Group，只让 Leader 解析一次地址，Follower 直接复用同一份 Hot 槽位与淘汰结果。'
-      },
-      {
-        html: () => `
-          <div class="viz-grid">
-            <div class="viz-card on"><h4>🛡️ 先保护全部命中，再选淘汰槽位</h4><div class="viz-pill ok">本步 TopK 命中 Hot 槽 1 → 原子标记 kHit 锁定</div><div class="viz-pill hot">先统计去重后的 Miss 数，装不下直接整体退出不破坏 LRU</div></div>
-          </div>`,
-        say: '第 2 步（防“自相残杀”的保护机制）：如果边找空位边淘汰，可能把本步后面还要用的 Hot 槽位给顶掉！因此 Kernel 先扫一遍保护所有命中，再统计总 Miss 数确认容量够用。'
-      },
-      {
-        html: () => `
-          <div class="viz-grid">
-            <div class="viz-card on"><h4>🔄 稳定 LRU 重排</h4><div class="viz-pill ok">命中的槽位前移到 MRU（最安全端）</div><div class="viz-pill">未命中的槽位保持原相对顺序，最老的排到最右端被淘汰</div></div>
-          </div>`,
-        say: '第 3 步（稳定 LRU）：NPU 并行重排时保持未命中槽位的相对顺序不变，淘汰最老槽位并填入新搬来的 Host 行，避免稀疏访问抖动导致反复换入换出。'
-      }
-    ],
-    prefix: [
-      {
-        html: () => `
-          <div class="viz-grid">
-            <div class="viz-card on"><h4>📦 长 Prefill 分块边算边落盘</h4><div class="viz-pill ok">Page 0, 1 D2H 写完 → 立刻 publish_blocks 发布前缀哈希</div><div class="viz-pill">Page 2, 3 还在继续算、继续写...</div></div>
-            <div class="viz-card"><h4>💡 为什么不等整条结束？</h4><div class="viz-pill hot">万一半途被抢占，已落盘的 Page 0, 1 依然能被后续直接复用！</div></div>
-          </div>`,
-        say: '第 1 步（按页耐久发布）：长文本 Prefill 往往要跑很多步。HiSparse 不等整条请求算完，只要连续前缀页（ready_prefix_pages）确认写稳到 CPU Host，就立刻发布前缀缓存。'
-      },
-      {
-        html: () => `
-          <div class="viz-grid">
-            <div class="viz-card warn"><h4>📝 Host 写时拷贝（COW）防踩踏</h4><div class="viz-pill hot">新请求复用共享前缀的最后一页（未满页）并继续追加写</div><div class="viz-pill ok">Coordinator 生成 Host COW 任务，拷贝到新块后再写</div></div>
-            <div class="viz-card on"><h4>🔒 租约保活（detached_blocks）</h4><div class="viz-pill ok">请求结束时若还有在途 D2H，先保住块租约等写完再释放</div></div>
-          </div>`,
-        say: '第 2 步（COW 与生命周期闭环）：当多个请求共享同一前缀并修改未满尾页时，先在 Host 池做 COW 拷贝保护旧前缀；请求结束时若有在途 DMA，也通过租约保活防提前覆盖。'
-      }
-    ]
-  };
+  const STEPS = [
+    { label: '① Prefill 写 Resident', active: ['comp', 'res', 'p0', 'p1'], arrows: ['a_comp_res'] },
+    { label: '② D2H 镜像 → Host + 发布前缀', active: ['res', 'p0', 'host', 'h0', 'dma'], arrows: ['a_d2h'] },
+    { label: '③ Unpin 释放引用（数据仍在 NPU）', active: ['pool', 'res', 'p0', 'p1'], arrows: ['a_unpin'] },
+    { label: '④ Decode 未被覆盖：直读 Resident', active: ['idx', 'res', 'p1', 'sfa', 'comp'], arrows: ['a_idx_sfa', 'a_res_sfa'] },
+    { label: '⑤ P0 被覆盖 → CopyStream 搬入 Hot（与计算重叠）', active: ['pool', 'host', 'h0', 'hot', 'dma', 'comp', 'idx'], arrows: ['a_evict', 'a_h2d'] },
+    { label: '⑥ SFA 共读 Resident+Hot · D2H 藏在 Draft 后', active: ['res', 'hot', 'sfa', 'comp', 'draft', 'dma', 'host'], arrows: ['a_res_sfa', 'a_hot_sfa', 'a_draft_d2h'] },
+  ];
 
-  let curScene = 'overview';
-  let curStep = 0;
-  let timer = null;
-
+  let cur = 0, timer = null;
   const canvas = document.getElementById('viz-canvas');
-  const say = document.getElementById('viz-say');
   const badge = document.getElementById('viz-badge');
+  const dots = document.getElementById('viz-dots');
   const playBtn = document.getElementById('viz-play');
 
+  function boxStyle(id, act, baseFill, baseStroke, actFill, actStroke) {
+    const on = act.has(id);
+    return `fill="${on ? actFill : baseFill}" stroke="${on ? actStroke : baseStroke}" stroke-width="${on ? 2.5 : 1.2}"`;
+  }
+
+  function arrowStyle(id, arrs, color) {
+    const on = arrs.has(id);
+    return `stroke="${on ? color : '#cfd9d3'}" stroke-width="${on ? 3 : 1.2}" opacity="${on ? 1 : 0.35}" class="${on ? 'flow-on' : ''}"`;
+  }
+
   function draw() {
-    const list = SCENES[curScene];
-    const item = list[curStep];
-    canvas.innerHTML = item.html();
-    say.textContent = item.say;
-    badge.textContent = `${curStep + 1} / ${list.length}`;
-    document.querySelectorAll('.viz-tab').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.viz === curScene);
-    });
+    const st = STEPS[cur];
+    const act = new Set(st.active);
+    const arr = new Set(st.arrows);
+    const p0Evicted = cur >= 4;
+
+    canvas.innerHTML = `
+      <svg viewBox="0 0 1000 470" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arr-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#236e77"/></marker>
+          <marker id="arr-warm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#a56b28"/></marker>
+          <marker id="arr-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#b2433a"/></marker>
+        </defs>
+
+        <!-- 顶部：NPU HBM 区域 -->
+        <rect x="20" y="16" width="660" height="245" rx="8" fill="#fffef9" stroke="#cfd9d3"/>
+        <text x="36" y="38" font-size="13" font-weight="700" fill="#173c40">NPU HBM（共享设备显存池）</text>
+
+        <!-- Resident 区 -->
+        <rect x="36" y="52" width="290" height="118" rx="6" ${boxStyle('res', act, '#f5f2e9', '#cfd9d3', '#e3f0ef', '#236e77')}/>
+        <text x="50" y="73" font-size="13" font-weight="700" fill="#173c40">Resident（页级驻留）</text>
+        <rect x="50" y="86" width="124" height="68" rx="4" ${p0Evicted ? 'fill="#f8dfdc" stroke="#b2433a" stroke-dasharray="4 3"' : boxStyle('p0', act, '#fffef9', '#cfd9d3', '#d5ecea', '#236e77')}/>
+        <text x="112" y="114" text-anchor="middle" font-size="12" font-weight="700" fill="${p0Evicted ? '#7a221b' : '#173c40'}">${p0Evicted ? 'Page 0 (被覆盖)' : 'Page 0'}</text>
+        <text x="112" y="134" text-anchor="middle" font-size="11" fill="#687976">${cur === 2 ? 'unpinned (可读)' : p0Evicted ? '_lose_page' : cur === 0 ? 'Dirty 写入' : 'Clean'}</text>
+        <rect x="186" y="86" width="124" height="68" rx="4" ${boxStyle('p1', act, '#fffef9', '#cfd9d3', '#d5ecea', '#236e77')}/>
+        <text x="248" y="114" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">Page 1</text>
+        <text x="248" y="134" text-anchor="middle" font-size="11" fill="#687976">${cur >= 3 ? '命中 Resident' : cur === 2 ? 'unpinned (可读)' : 'Pinned'}</text>
+
+        <!-- Hot 区 -->
+        <rect x="352" y="52" width="160" height="118" rx="6" ${boxStyle('hot', act, '#f5f2e9', '#cfd9d3', '#f7ebd8', '#a56b28')}/>
+        <text x="366" y="73" font-size="13" font-weight="700" fill="#173c40">Hot（LRU 稀疏槽）</text>
+        <rect x="366" y="86" width="132" height="32" rx="4" ${cur >= 4 ? 'fill="#f5e4c8" stroke="#a56b28" stroke-width="2"' : 'fill="#fffef9" stroke="#cfd9d3"'}/>
+        <text x="432" y="106" text-anchor="middle" font-size="11" font-weight="700" fill="#6c4213">${cur >= 4 ? 'P0 冷行 (H2D)' : '空槽 (LRU)'}</text>
+        <rect x="366" y="124" width="132" height="30" rx="4" fill="#fffef9" stroke="#cfd9d3"/>
+        <text x="432" y="143" text-anchor="middle" font-size="11" fill="#687976">已有热点行</text>
+
+        <!-- Indexer + SFA -->
+        <rect x="534" y="52" width="130" height="52" rx="6" ${boxStyle('idx', act, '#f5f2e9', '#cfd9d3', '#e3f0ef', '#236e77')}/>
+        <text x="599" y="82" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">Indexer Top-K</text>
+
+        <rect x="534" y="118" width="130" height="52" rx="6" ${boxStyle('sfa', act, '#f5f2e9', '#cfd9d3', '#e3f0ef', '#236e77')}/>
+        <text x="599" y="148" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">SFA 注意力算子</text>
+
+        <!-- NPU 流时间轴 -->
+        <rect x="36" y="186" width="628" height="62" rx="6" fill="#f5f2e9" stroke="#cfd9d3"/>
+        <text x="48" y="206" font-size="11" font-weight="700" fill="#173c40">ComputeStream</text>
+        <rect x="155" y="191" width="160" height="22" rx="3" ${boxStyle('comp', act, '#fffef9', '#cfd9d3', '#d5ecea', '#236e77')}/>
+        <text x="235" y="206" text-anchor="middle" font-size="11" fill="#173c40">计算当前层 / SFA</text>
+        <rect x="325" y="191" width="170" height="22" rx="3" ${boxStyle('draft', act, '#fffef9', '#cfd9d3', '#e6eaf8', '#5c7caa')}/>
+        <text x="410" y="206" text-anchor="middle" font-size="11" fill="#223859">Draft 投机层（不等 D2H）</text>
+
+        <text x="48" y="236" font-size="11" font-weight="700" fill="#6c4213">CopyStream/DMA</text>
+        <rect x="155" y="220" width="340" height="22" rx="3" ${boxStyle('dma', act, '#fffef9', '#cfd9d3', '#f5e4c8', '#a56b28')}/>
+        <text x="325" y="235" text-anchor="middle" font-size="11" fill="#6c4213">${cur === 4 ? 'H2D 提前搬运下层冷行（与计算并行）' : cur === 5 ? 'D2H 异步写回（藏在 Draft 计算期间）' : cur === 1 ? 'D2H 镜像到 Host Source' : '空闲 / wait_event 边界'}</text>
+
+        <!-- 右侧：Control (BlockPool) -->
+        <rect x="705" y="16" width="275" height="145" rx="8" ${boxStyle('pool', act, '#fffef9', '#cfd9d3', '#f7ebd8', '#a56b28')}/>
+        <text x="721" y="40" font-size="13" font-weight="700" fill="#173c40">Control · BlockPool</text>
+        <rect x="721" y="54" width="243" height="40" rx="4" fill="#f5f2e9" stroke="#cfd9d3"/>
+        <text x="842" y="79" text-anchor="middle" font-size="12" fill="#173c40">${cur === 2 ? 'unpin_blocks (free+1, 保留数据)' : cur === 4 ? '新请求覆盖 P0 → 触发 _on_block_reused' : '引用计数与回调管理'}</text>
+        <rect x="721" y="104" width="243" height="40" rx="4" fill="#f5f2e9" stroke="#cfd9d3"/>
+        <text x="842" y="129" text-anchor="middle" font-size="12" fill="#173c40">${cur === 4 ? 'residency_updates → 标 P0 失效' : '前缀哈希发布 / COW 保护'}</text>
+
+        <!-- 底部：CPU DRAM (Host Source) -->
+        <rect x="20" y="286" width="960" height="156" rx="8" ${boxStyle('host', act, '#fffef9', '#cfd9d3', '#eaf0fa', '#5c7caa')}/>
+        <text x="36" y="310" font-size="13" font-weight="700" fill="#173c40">CPU DRAM · Host Source（全量历史 KV 后备池）</text>
+        <rect x="36" y="326" width="180" height="92" rx="5" ${boxStyle('h0', act, '#f5f2e9', '#cfd9d3', '#d5ecea', '#236e77')}/>
+        <text x="126" y="362" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">Host Page 0</text>
+        <text x="126" y="384" text-anchor="middle" font-size="11" fill="#687976">${cur >= 1 ? 'valid · 前缀已发布' : '等待 D2H'}</text>
+        <rect x="234" y="326" width="180" height="92" rx="5" fill="#f5f2e9" stroke="#cfd9d3"/>
+        <text x="324" y="362" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">Host Page 1</text>
+        <text x="324" y="384" text-anchor="middle" font-size="11" fill="#687976">${cur >= 1 ? 'valid · 前缀已发布' : '等待 D2H'}</text>
+        <rect x="432" y="326" width="530" height="92" rx="5" fill="#f5f2e9" stroke="#cfd9d3"/>
+        <text x="697" y="366" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">Prefix Cache / Host COW 尾页保护</text>
+        <text x="697" y="390" text-anchor="middle" font-size="11" fill="#687976">连续页写稳即 publish_blocks；共享尾页先 COW 拷贝再追加</text>
+
+        <!-- 数据搬运与控制箭头 -->
+        <path d="M235,191 L180,170" fill="none" marker-end="url(#arr-teal)" ${arrowStyle('a_comp_res', arr, '#236e77')}/>
+        <path d="M112,154 L112,326" fill="none" marker-end="url(#arr-warm)" ${arrowStyle('a_d2h', arr, '#a56b28')}/>
+        <path d="M705,88 L326,110" fill="none" marker-end="url(#arr-warm)" ${arrowStyle('a_unpin', arr, '#a56b28')}/>
+        <path d="M705,120 L174,120" fill="none" marker-end="url(#arr-red)" ${arrowStyle('a_evict', arr, '#b2433a')}/>
+        <path d="M599,104 L599,118" fill="none" marker-end="url(#arr-teal)" ${arrowStyle('a_idx_sfa', arr, '#236e77')}/>
+        <path d="M310,136 L534,144" fill="none" marker-end="url(#arr-teal)" ${arrowStyle('a_res_sfa', arr, '#236e77')}/>
+        <path d="M500,144 L534,144" fill="none" marker-end="url(#arr-warm)" ${arrowStyle('a_hot_sfa', arr, '#a56b28')}/>
+        <path d="M160,326 L410,170" fill="none" marker-end="url(#arr-warm)" ${arrowStyle('a_h2d', arr, '#a56b28')}/>
+        <path d="M410,242 L410,326" fill="none" marker-end="url(#arr-warm)" ${arrowStyle('a_draft_d2h', arr, '#a56b28')}/>
+      </svg>
+    `;
+
+    badge.textContent = `${cur + 1} / ${STEPS.length}`;
+    dots.innerHTML = STEPS.map((x, i) => `<button type="button" class="step-dot ${i === cur ? 'active' : ''}" data-i="${i}">${x.label}</button>`).join('');
+    dots.querySelectorAll('.step-dot').forEach(b => b.addEventListener('click', () => { stop(); cur = +b.dataset.i; draw(); }));
   }
 
   function stop() {
     if (timer) { clearInterval(timer); timer = null; }
-    playBtn.textContent = '▶ 自动播放';
+    playBtn.textContent = '▶ 播放';
   }
 
   playBtn.addEventListener('click', () => {
     if (timer) return stop();
     playBtn.textContent = '⏸ 暂停';
-    timer = setInterval(() => { curStep = (curStep + 1) % SCENES[curScene].length; draw(); }, 2800);
+    timer = setInterval(() => { cur = (cur + 1) % STEPS.length; draw(); }, 2300);
   });
-
-  document.getElementById('viz-next').addEventListener('click', () => {
-    stop();
-    curStep = (curStep + 1) % SCENES[curScene].length;
-    draw();
-  });
-
-  document.getElementById('viz-reset').addEventListener('click', () => {
-    stop();
-    curStep = 0;
-    draw();
-  });
-
-  document.querySelectorAll('.viz-tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      stop();
-      curScene = btn.dataset.viz;
-      curStep = 0;
-      draw();
-    });
-  });
+  document.getElementById('viz-next').addEventListener('click', () => { stop(); cur = (cur + 1) % STEPS.length; draw(); });
+  document.getElementById('viz-prev').addEventListener('click', () => { stop(); cur = (cur - 1 + STEPS.length) % STEPS.length; draw(); });
+  document.getElementById('viz-reset').addEventListener('click', () => { stop(); cur = 0; draw(); });
 
   draw();
 })();
