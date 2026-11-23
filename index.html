@@ -43,14 +43,14 @@
 .viz-say{margin-top:14px;padding:12px 15px;border-left:4px solid var(--accent);background:var(--wash);font-size:14px;line-height:1.75;color:var(--ink)}
 </style></head><body><div id="progress" aria-hidden="true"></div><div class="layout" id="top"><aside class="rail"><div class="brand">SOURCE-VERIFIED DESIGN<br>HISPARSE / ASCEND / PCP</div><nav class="site-nav" aria-label="主题导航"><a href="index.html" aria-current="page">目录首页</a><a href="hisparse.html">01 HiSparse 总览与详细机制</a><a href="pcp.html">02 PCP 原生设计</a><a href="hisparse-pcp.html">03 HiSparse + PCP 组合设计</a><a href="pr21892-walkthrough.html">04 #21892 图解设计</a></nav><small>固定提交走读 · 2026-11-15<br>图可横向滚动或放大；源码默认折叠。<br>三篇独立阅读，页面保存在同目录即可离线浏览。</small></aside><main><header><span class="eyebrow">ARCHITECTURE / PARALLELISM / INTEGRATION</span><h1>三个主题，<br>一条完整的设计主线。</h1><p class="lede">先理解 HiSparse 如何管理和搬运 KV，再理解 PCP 如何拆分计算与组织写入，最后看两者如何组合。</p><div class="path">01 HiSparse → 02 PCP → 03 HiSparse + PCP</div></header>
 <section class="intuition-sec" id="intuition">
-  <span class="eyebrow">3 分钟直觉入门 · 不用看代码</span>
-  <h2>先用 3 个动画看懂 HiSparse 的核心直觉</h2>
-  <p class="intuition-lead">先不看类和函数，只看<strong>显存怎么省、老页怎么白嫖命中、搬运怎么藏进计算里</strong>。</p>
+  <span class="eyebrow">核心机制速览 · 事实与数据流</span>
+  <h2>先用 5 个动画看清 HiSparse 的关键设计</h2>
+  <p class="intuition-lead">直接按真实数据流看清<strong>四类缓存分工、Resident 延迟失效、多流掩盖搬运、稳定 LRU 与前缀发布/COW</strong>。</p>
 
   <div class="viz-tabs" role="tablist">
-    <button type="button" class="viz-tab active" data-viz="overview">① 整体直觉：桌面与档案室</button>
-    <button type="button" class="viz-tab" data-viz="resident">② 为什么“还给池了还能命中”？</button>
-    <button type="button" class="viz-tab" data-viz="overlap">③ 如何掩盖搬运与计算？</button>
+    <button type="button" class="viz-tab active" data-viz="overview">① 整体数据流：NPU 与 Host 分工</button>
+    <button type="button" class="viz-tab" data-viz="resident">② Resident 延迟失效（Unpin ≠ 失效）</button>
+    <button type="button" class="viz-tab" data-viz="overlap">③ 多流掩盖搬运与计算</button>
     <button type="button" class="viz-tab" data-viz="lru">④ 共享组一次解析与稳定 LRU</button>
     <button type="button" class="viz-tab" data-viz="prefix">⑤ 边算边发前缀与 COW 保护</button>
   </div>
@@ -87,68 +87,68 @@ window.addEventListener('scroll',()=>{const total=document.documentElement.scrol
       {
         html: () => `
           <div class="viz-grid">
-            <div class="viz-card on"><h4>🖥️ NPU 显存（办公桌：小但极快）</h4><div class="viz-pill ok">Resident（驻留区）：刚写完的第 0, 1, 2 页</div><div class="viz-pill">Hot（便签区）：暂时空着</div></div>
-            <div class="viz-card"><h4>🗄️ CPU 内存（档案室：大但慢）</h4><div class="viz-pill">Host Source：后台正在异步抄送副本...</div></div>
+            <div class="viz-card on"><h4>NPU HBM（共享设备池）</h4><div class="viz-pill ok">Resident：当前写入的 Page 0, 1, 2</div><div class="viz-pill">Hot：按 blocks_per_request 预留，暂未换入</div></div>
+            <div class="viz-card"><h4>CPU DRAM（私有 HostPool）</h4><div class="viz-pill">Host Source：后台 copy_stream 正在异步 D2H 镜像</div></div>
           </div>`,
-        say: '第 1 步（写桌面 + 抄送档案室）：Prefill 算出的新 KV 直接写在 NPU 显存（Resident），同时后台通过 DMA 悄悄往 CPU 内存（Host）抄送一份永久备份。'
+        say: '第 1 步（Prefill 写入 + D2H 镜像）：Prefill 计算出的新 KV 直接写入 NPU Resident 页；同时在后台发起异步 D2H 逐行镜像到 CPU Host Source。'
       },
       {
         html: () => `
           <div class="viz-grid">
-            <div class="viz-card warn"><h4>🖥️ NPU 显存快满了：腾出老页</h4><div class="viz-pill">第 0 页已经抄送完成 → 标记为“可回收”</div><div class="viz-pill ok">第 1, 2 页继续留在桌上</div></div>
-            <div class="viz-card on"><h4>🗄️ CPU 档案室已存稳</h4><div class="viz-pill ok">第 0, 1, 2 页都有完整历史备份</div></div>
+            <div class="viz-card warn"><h4>NPU HBM（释放旧页引用）</h4><div class="viz-pill">Page 0 D2H 完成 → Coordinator 执行 unpin_blocks</div><div class="viz-pill ok">Page 1, 2 仍保留在 Resident</div></div>
+            <div class="viz-card on"><h4>CPU DRAM（Host Source 耐久）</h4><div class="viz-pill ok">Page 0, 1, 2 均已标记 valid_pages</div></div>
           </div>`,
-        say: '第 2 步（桌面腾空间）：当档案室确认备份写稳后，桌上的老页（第 0 页）就可以把“占用锁”解开，让新请求能随时复用这块显存。'
+        say: '第 2 步（写回完成与可回收）：当 Host 副本确认落盘（valid_pages）且请求具备 Hot 能力后，老页（Page 0）的池引用计数被释放，显存池可将其重新分配给后续请求。'
       },
       {
         html: () => `
           <div class="viz-grid">
-            <div class="viz-card on"><h4>🔍 Indexer 挑出最相关的 Top-K 行</h4><div class="viz-pill ok">选中的行大多在第 1, 2 页（桌上还有！）</div><div class="viz-pill hot">只有第 0 页的 3 行不在桌上 → 从档案室搬进 Hot 便签区</div></div>
-            <div class="viz-card on"><h4>🗄️ CPU 档案室按行供货</h4><div class="viz-pill hot">不搬整页 128 行，只搬挑中的那 3 行！</div></div>
+            <div class="viz-card on"><h4>Indexer 选出 Top-K 逻辑索引</h4><div class="viz-pill ok">命中 Page 1, 2 的 token → 直接读 Resident 物理行</div><div class="viz-pill hot">Page 0 已被覆盖 → 只把选中的 3 行 H2D 搬入 Hot</div></div>
+            <div class="viz-card on"><h4>CPU DRAM（按行稀疏读取）</h4><div class="viz-pill hot">hisparse_gather_compact：仅读取 Miss 的 3 行，不搬整页</div></div>
           </div>`,
-        say: '第 3 步（稀疏按行换入）：Decode 时不需要把整页 128 行都搬回 NPU！只把“桌面丢了、但 Indexer 又选中了”的少数几行，从 CPU 搬到 NPU 的 Hot 便签区。'
+        say: '第 3 步（Decode 按行稀疏换入）：Decode 时不需要整页（128 行）恢复；仅对 Resident 未命中且被 Top-K 选中的冷行，从 Host 按行 gather 进 NPU Hot 缓冲区。'
       },
       {
         html: () => `
           <div class="viz-grid">
-            <div class="viz-card on"><h4>⚡ 一次算完（Resident + Hot 同池共读）</h4><div class="viz-pill ok">Resident 物理行（第 1, 2 页原地直读）</div><div class="viz-pill hot">Hot 物理行（刚搬来的 3 行）</div></div>
-            <div class="viz-card on"><h4>🎯 最终效果</h4><div class="viz-pill ok">省下大量 NPU 显存，又几乎不牺牲吞吐</div></div>
+            <div class="viz-card on"><h4>Resident + Hot 共享同一设备 backing</h4><div class="viz-pill ok">Resident 物理行（Page 1, 2）</div><div class="viz-pill hot">Hot 物理行（来自 Page 0 的 3 行）</div></div>
+            <div class="viz-card on"><h4>Sparse Attention (SFA)</h4><div class="viz-pill ok">一次内核调用读取统一物理行索引数组</div></div>
           </div>`,
-        say: '第 4 步（同池共读）：因为 Resident 和 Hot 都在同一块 NPU 物理池里，注意力算子一次就能同时读完“桌面上的整页 + 便签区里的稀疏行”，不用再搬来搬去。'
+        say: '第 4 步（统一物理寻址计算）：Resident 与 Hot 共享同一块 NPU 物理显存 backing，解析出的物理行号数组直接送入 SFA 算子，一次读取完成计算。'
       }
     ],
     resident: [
       {
         html: () => `
           <div class="viz-grid">
-            <div class="viz-card on"><h4>🏨 房间 101（NPU 物理块）</h4><div class="viz-pill ok">住户：请求 A 的第 0 页 KV 数据</div><div class="viz-pill">状态：Pinned（锁门占用中）</div></div>
-            <div class="viz-card"><h4>🛎️ 前台账本（BlockPool）</h4><div class="viz-pill">可用空房数：0</div></div>
+            <div class="viz-card on"><h4>NPU 物理块 Block 101</h4><div class="viz-pill ok">内容：请求 A 的 Page 0 KV 数据</div><div class="viz-pill">状态：Dirty / Pinned（引用计数 = 1，不可回收）</div></div>
+            <div class="viz-card"><h4>BlockPool 分配器</h4><div class="viz-pill">free_blocks 未计入 Block 101</div></div>
           </div>`,
-        say: '第 1 步（占用中）：请求 A 的第 0 页住在 101 房，此时 Host 备份还没写完，房门锁死，前台不能把 101 房分给别人。'
+        say: '第 1 步（Dirty / Pinned）：请求 A 的 Page 0 刚写入 Block 101，Host 镜像尚未完成，BlockPool 引用计数为 1，绝对不可被覆盖。'
       },
       {
         html: () => `
           <div class="viz-grid">
-            <div class="viz-card warn"><h4>🏨 房间 101（Unpin：退房但不清扫）</h4><div class="viz-pill ok">房里依然完整保留着请求 A 的 KV 数据！</div><div class="viz-pill hot">只是把钥匙还给了前台</div></div>
-            <div class="viz-card on"><h4>🛎️ 前台账本（BlockPool）</h4><div class="viz-pill ok">可用空房数：+1（随时可分配给新客人）</div></div>
+            <div class="viz-card warn"><h4>NPU 物理块 Block 101（Unpin，不清数据）</h4><div class="viz-pill ok">显存上的 KV 字节数据原封不动保留！</div><div class="viz-pill hot">Coordinator 仅执行 unpin_blocks 释放引用计数</div></div>
+            <div class="viz-card on"><h4>BlockPool 分配器</h4><div class="viz-pill ok">free_blocks +1（Block 101 进入可分配队列，挂上 _on_block_reused 回调）</div></div>
           </div>`,
-        say: '第 2 步（关键设计：还钥匙但不清房！）：Host 备份写完后，Coordinator 对 101 房执行 Unpin。显存池认为它“空闲了”，但其实数据还在原地没动！'
+        say: '第 2 步（Unpin ≠ 失效）：Host 写回完成后，Coordinator 调用 unpin_blocks 释放引用计数并登记回调，但并不抹除块内容，也不通知 Worker 失效。'
       },
       {
         html: () => `
           <div class="viz-grid">
-            <div class="viz-card on"><h4>🏨 房间 101（只要没人新入住，继续白嫖！）</h4><div class="viz-pill ok">请求 A 回来 Decode：101 房还是我的原数据 → 直接命中 Resident！</div></div>
-            <div class="viz-card"><h4>⚡ 收益</h4><div class="viz-pill ok">零拷贝、零 Host 访问，完全白嫖 NPU 命中！</div></div>
+            <div class="viz-card on"><h4>Block 101 尚未被新请求分配走</h4><div class="viz-pill ok">请求 A 下一轮 Decode：设备端 residency 表仍指向 Block 101 → 直接命中 Resident</div></div>
+            <div class="viz-card"><h4>实际效果</h4><div class="viz-pill ok">零 H2D 拷贝、零 Host 内存访问，直接复用 NPU 数据</div></div>
           </div>`,
-        say: '第 3 步（为什么归还了还算命中？）：只要没有新请求真的住进 101 房，请求 A 就继续把它当 Resident 命中来读！这就是“可回收”与“真正失效”分离的威力。'
+        say: '第 3 步（延迟失效窗口）：只要 BlockPool 还没把 Block 101 分配给新请求，请求 A 的设备端 residency 表就一直有效，继续直接命中 Resident。'
       },
       {
         html: () => `
           <div class="viz-grid">
-            <div class="viz-card bad"><h4>🏨 房间 101（新请求 B 真正入住覆盖）</h4><div class="viz-pill miss">触发回调：把 101 房从请求 A 的 Resident 表抹除</div></div>
-            <div class="viz-card on"><h4>🛎️ 通知 Worker（residency_updates）</h4><div class="viz-pill hot">以后请求 A 再查第 0 页，才改从 Host 搬到 Hot</div></div>
+            <div class="viz-card bad"><h4>Block 101 被新请求 B 分配覆盖</h4><div class="viz-pill miss">BlockPool 触发 _on_block_reused → _lose_page</div></div>
+            <div class="viz-card on"><h4>下发 residency_updates</h4><div class="viz-pill hot">start_step 更新设备端 residency 表置为无效，后续访问改走 Host → Hot</div></div>
           </div>`,
-        say: '第 4 步（真正失效）：直到新请求 B 真的被分到了 101 房，BlockPool 才触发回调通知请求 A“这页易主了”。请求 A 从下一轮起才改走 Host → Hot。'
+        say: '第 4 步（真正失效）：直到新请求 B 实际分配到 Block 101，回调 _on_block_reused 才执行 _lose_page 标记该页失效，并通过 residency_updates 同步给 Worker。'
       }
     ],
     overlap: [
