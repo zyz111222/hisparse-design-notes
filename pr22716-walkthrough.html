@@ -1,0 +1,284 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="vllm-ascend PR #22716 设计与源码走读：HMA 共享池整页对齐、PCP padding 切片、PA_BSND 快路径与 TND 兜底。"><title>#22716 图解与代码走读｜HiSparse / PCP 设计笔记</title><style>
+:root{--bg:#f5f2e9;--paper:#fffef9;--ink:#173c40;--text:#304347;--muted:#687976;--accent:#236e77;--line:#cfd9d3;--warm:#a56b28;--wash:#e9eeea;--red:#9e332b}*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.85 "Microsoft YaHei","PingFang SC",sans-serif}a{color:var(--accent);text-underline-offset:4px}a:hover{color:var(--warm)}button,summary,a{touch-action:manipulation}a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--warm);outline-offset:3px}h1,h2,h3{color:var(--ink);line-height:1.4}h1{font:700 clamp(32px,3.8vw,52px)/1.22 "SimSun","Songti SC",serif;letter-spacing:-1px;margin:18px 0}h2{font-size:26px;margin:0 0 14px}h3{font-size:19px;margin:26px 0 10px}p{margin:0 0 16px}strong{color:var(--ink)}code,.mono{font-family:Consolas,"Cascadia Mono",monospace;font-size:.88em;overflow-wrap:anywhere}.layout{display:grid;grid-template-columns:245px minmax(0,1fr);gap:42px;max-width:1550px;padding:42px 38px 70px;margin:auto}.layout>main{min-width:0}.rail{position:sticky;top:25px;align-self:start;max-height:calc(100vh - 50px);overflow:auto;padding-right:12px}.brand{font:12px/1.7 Consolas,monospace;letter-spacing:2px;color:var(--accent);border-bottom:2px solid var(--ink);padding-bottom:16px;margin-bottom:16px}.rail .site-nav{display:block;border-bottom:1px solid var(--line);margin-bottom:16px;padding-bottom:14px}.site-nav a{padding:7px 10px;display:block;border-left:2px solid transparent;font-size:13px;text-decoration:none;border-bottom:1px solid var(--line)}.site-nav a[aria-current=page]{background:var(--wash);border-left-color:var(--accent);font-weight:700;color:var(--ink)}.rail .toc a{display:block;padding:5px 0;text-decoration:none;font-size:12px;line-height:1.6;border-bottom:1px solid var(--line)}.rail .toc a.active{font-weight:700;color:var(--ink);border-left:3px solid var(--accent);padding-left:8px}.rail .toc b{font:11px Consolas,monospace;color:var(--muted);display:inline-block;min-width:24px;margin-right:6px}.tools{display:flex;flex-wrap:wrap;gap:8px;margin:17px 0}button{font:12px/1.5 "Microsoft YaHei",sans-serif;padding:6px 10px;background:var(--paper);color:var(--accent);border:1px solid var(--line);border-radius:3px;cursor:pointer}.eyebrow,.num{font:12px/1.6 Consolas,monospace;letter-spacing:2px;color:var(--accent)}.lede{font-size:19px;max-width:920px}.meta{font-size:13px;border-block:1px solid var(--line);padding:14px 0;margin:22px 0}.meta p{margin:3px 0}.chapter{padding:38px 0 24px;border-bottom:1px solid var(--line)}.num{display:block;margin-bottom:10px}.takeaway{border-left:4px solid var(--accent);background:var(--wash);padding:18px 22px;margin:22px 0}.note{font-size:14px;background:#f2e9d9;border-left:3px solid var(--warm);padding:15px 20px;margin:22px 0}.table-scroll{overflow:auto;margin:22px 0;border:1px solid var(--line);border-radius:4px}table{border-collapse:collapse;width:100%;font-size:14px;background:var(--paper);min-width:660px}th{background:var(--wash);color:var(--ink);text-align:left;font-weight:600}td,th{border-bottom:1px solid var(--line);padding:12px 15px;vertical-align:top}tr:last-child td{border-bottom:0}.diagram{margin:26px 0;border:1px solid var(--line);background:var(--paper);border-radius:7px;overflow:hidden}.diagram figcaption{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:13px 17px;background:var(--wash);font-size:15px;font-weight:600;color:var(--ink)}.diagram-scroll{overflow:auto;padding:12px 8px}.diagram svg{display:block;max-width:100%;height:auto;min-width:860px;font-family:"Microsoft YaHei",sans-serif}.diagram .caption{font-size:12px;color:var(--muted);border-top:1px solid var(--line);margin:0;padding:12px 16px;line-height:1.7}.evidence{margin:22px 0;border:1px solid var(--line);background:#edf0e9;border-radius:4px;font-size:13px}summary{cursor:pointer;padding:12px 15px;color:var(--accent);font-weight:600;list-style-position:inside}details[open]>summary{border-bottom:1px solid var(--line)}.source{padding:12px 15px 0}.source pre{margin:0 0 15px;padding:15px;background:var(--paper);border:1px solid var(--line);overflow:auto;line-height:1.65;max-height:640px}.source pre code{font-size:12px;white-space:pre;overflow-wrap:normal}.rail small{font-size:11px;color:var(--muted)}footer{padding-top:25px;font-size:12px;color:var(--muted)}#progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);z-index:20;width:0}
+@media(max-width:1050px){.layout{grid-template-columns:minmax(0,1fr);padding:24px 20px 55px;gap:16px}.rail{position:static;max-height:none;padding:0}.rail .site-nav{display:flex;flex-wrap:wrap;gap:3px}.rail .site-nav a{flex:1;min-width:120px}.rail .toc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px 16px}.rail small{display:none}}
+@media(max-width:600px){.layout{padding:20px 14px 45px}.rail .toc{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style></head><body><div id="progress" aria-hidden="true"></div><div class="layout" id="top"><aside class="rail"><div class="brand">PR #22716 WALKTHROUGH<br>HISPARSE PREFILL FIX</div><nav class="site-nav" aria-label="主题导航"><a href="index.html">目录首页</a><a href="hisparse.html">01 HiSparse 总览与详细机制</a><a href="pcp.html">02 PCP 原生设计</a><a href="hisparse-pcp.html">03 HiSparse + PCP 组合设计</a><a href="pr21892-walkthrough.html">04 #21892 图解设计</a><a href="pr22716-walkthrough.html" aria-current="page">05 #22716 Prefill 整页对齐</a></nav><nav class="toc" aria-label="本页目录"><a href="#c1"><b>01</b>问题根因</a><a href="#c2"><b>02</b>路径对比与收益</a><a href="#c3"><b>03</b>binding.py 整页对齐</a><a href="#c4"><b>04</b>sfa_hisparse.py 分流与兜底</a><a href="#c5"><b>05</b>HostMirror 掩盖边界</a></nav><div class="tools"><button type="button" id="toggle-evidence" aria-expanded="true">折叠全部源码</button><button type="button" id="print-page">打印 / PDF</button></div><small>固定提交：<code>7842b4718</code> (base <code>44052241f</code>)<br>关联 PR：<a href="https://github.com/vllm-project/vllm-ascend/pull/22716">vllm-ascend#22716</a></small></aside><main><header><span class="eyebrow">PR #22716 · BUGFIX / PERFORMANCE</span><h1>#22716 图解与代码走读：<br>HMA 整页对齐与 Prefill 路径修复</h1><p class="lede">为什么 78 层模型与 <code>PCP &gt; 1</code> 下 Prefill 会掉回 Host 搬运慢路径？如何通过 <code>binding.py</code> 整页对齐打通原生 <code>PA_BSND</code>，并保留 Resident <code>TND</code> 作为安全兜底。</p><div class="meta"><p><strong>PR 标题：</strong><code>[Bugfix][HiSparse] Align HMA block stride to full MLA pages and support TND/PCP prefill fallback</code></p><p><strong>固定分支：</strong><code>fix/hisparse-resident-prefill-tnd-pcp</code> @ <code>7842b4718</code>（base <code>44052241f</code>）</p><p><strong>改动范围：</strong><code>vllm_ascend/hisparse/binding.py</code>、<code>vllm_ascend/attention/sfa_hisparse.py</code> 及 2 份 CPU 单测（<code>test_hisparse_foundation_cpu.py</code>、<code>test_hisparse_pcp_cpu.py</code>）</p></div></header>
+
+<section class="chapter" id="c1"><span class="num">SECTION 01</span><h2>问题根因：为什么之前 Prefill 掉回慢路径？</h2>
+<p>在 base 分支（<code>44052241f</code>）上，<code>_try_c8_resident_prefill</code> 原本只支持<strong>原生 <code>PA_BSND</code> 快路径</strong>。只要任一条件不满足，它就会直接 <code>return None</code>，使整个 Prefill 掉入 <code>stage_prefill_rows</code>（将 KV 从 Host 内存重新 H2D 搬运到临时缓冲）+ <code>_c8_physical_attention</code>（<code>TND</code>）慢路径。</p>
+<div class="takeaway"><strong>三个把 Prefill 踢出 <code>PA_BSND</code> 的根因：</strong>
+<ol>
+<li><strong>HMA 共享池 <code>remainder != 0</code></strong>：78 层模型与 Indexer 共享物理 slab 时，<code>binding.py</code> 此前只按单行粒度（<code>656 B</code>）声明 <code>block_stride_alignment</code>，且未向共池的 <code>AscendSFAIndexerCacheSpec</code> 透传整页对齐。导致 Core 算出的 <code>attention_block_stride</code> 不能被 <code>block_size = 128</code> 整除（<code>remainder != 0</code>），<code>PA_BSND</code> 无法按页步长直接寻址。</li>
+<li><strong><code>PCP &gt; 1</code> 的 padding 门禁误杀</strong>：开启 <code>PCP=2</code> 后，<code>query</code> 与 <code>logical_topk</code> 尾部带有 PCP padding 行（<code>query.shape[0] &gt; num_prefill_tokens</code>），原代码用严格相等 <code>query.shape[0] == num_prefill_tokens</code> 拦截，直接导致 <code>PCP=2</code> 全程无法进入 resident prefill。</li>
+<li><strong>BF16 路径未复用 paged SFA</strong>：非 C8（<code>enable_sparse_sfa_c8=False</code>）场景在 <code>stage_prefill_rows</code> 后还要做一次 <code>sort + pack_attention_rows</code> 重打包，未直接复用 <code>super()._execute_sparse_flash_attention_process</code> 的 <code>PA_BSND</code> 分页能力。</li>
+</ol></div>
+
+<figure class="diagram"><figcaption><span>图 1：HMA 共享池 block_stride 几何错位（旧）vs 整页对齐（新）</span></figcaption><div class="diagram-scroll"><svg viewBox="0 0 980 340" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#236e77"/></marker><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#9e332b"/></marker></defs>
+<rect x="18" y="16" width="944" height="145" rx="7" fill="#fdf6f5" stroke="#d9b7b4"/>
+<text x="34" y="42" font-size="14" font-weight="700" fill="#9e332b">修复前（binding.py 仅按行对齐 656 B，且 Core 丢弃合成 Spec 的对齐约束）</text>
+<rect x="34" y="58" width="180" height="58" rx="5" fill="#fffef9" stroke="#cfd9d3"/><text x="124" y="83" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">Block 0 有效 MLA 页</text><text x="124" y="103" text-anchor="middle" font-size="11" fill="#687976">128 行 × 656 B = 83,968 B</text>
+<rect x="218" y="58" width="110" height="58" rx="5" fill="#f8e3d6" stroke="#a56b28" stroke-dasharray="4 3"/><text x="273" y="83" text-anchor="middle" font-size="12" font-weight="700" fill="#824d12">HMA 空隙</text><text x="273" y="103" text-anchor="middle" font-size="11" fill="#824d12">非整页 (rem != 0)</text>
+<rect x="332" y="58" width="180" height="58" rx="5" fill="#fffef9" stroke="#cfd9d3"/><text x="422" y="83" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">Block 1 有效 MLA 页</text><text x="422" y="103" text-anchor="middle" font-size="11" fill="#687976">起始地址未对齐 83,968 B</text>
+<path d="M525 87 L600 87" stroke="#9e332b" stroke-width="2.2" marker-end="url(#ar2)"/>
+<rect x="610" y="56" width="334" height="64" rx="5" fill="#f8dfdc" stroke="#9e332b"/><text x="777" y="81" text-anchor="middle" font-size="12" font-weight="700" fill="#7a221b">PA_BSND 检查 remainder != 0 → 失败</text><text x="777" y="102" text-anchor="middle" font-size="11" fill="#7a221b">退回 stage_prefill_rows (Host H2D) + TND</text>
+<text x="34" y="144" font-size="12" fill="#7a221b">后果：即使全部上下文都在 NPU Resident 上，每步仍要重新从 Host 搬运，导致 A3 TTFT +78%~+100%，A5 32K TTFT +138%</text>
+
+<rect x="18" y="178" width="944" height="145" rx="7" fill="#f2f7f6" stroke="#b6d1ce"/>
+<text x="34" y="204" font-size="14" font-weight="700" fill="#173c40">修复后（binding.py 将共池 Indexer + Resident/Hot 对齐至整页 83,968 B）</text>
+<rect x="34" y="220" width="180" height="58" rx="5" fill="#e3f0ef" stroke="#236e77"/><text x="124" y="245" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">Block 0 (Page 0)</text><text x="124" y="265" text-anchor="middle" font-size="11" fill="#236e77">83,968 B (stride 0)</text>
+<rect x="218" y="220" width="150" height="58" rx="5" fill="#e9eeea" stroke="#236e77" stroke-dasharray="4 3"/><text x="293" y="245" text-anchor="middle" font-size="12" font-weight="700" fill="#236e77">整页对齐空隙</text><text x="293" y="265" text-anchor="middle" font-size="11" fill="#236e77">(page_stride-1) 整页</text>
+<rect x="372" y="220" width="180" height="58" rx="5" fill="#e3f0ef" stroke="#236e77"/><text x="462" y="245" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">Block 1 (Page K)</text><text x="462" y="265" text-anchor="middle" font-size="11" fill="#236e77">83,968 B (K = page_stride)</text>
+<path d="M565 249 L625 249" stroke="#236e77" stroke-width="2.2" marker-end="url(#ar1)"/>
+<rect x="635" y="218" width="309" height="64" rx="5" fill="#d5ecea" stroke="#236e77"/><text x="789" y="243" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">table.mul(page_stride) → PA_BSND</text><text x="789" y="264" text-anchor="middle" font-size="11" fill="#236e77">A5 实测：stride=640 (5×128), rem=0, 零搬运</text>
+<text x="34" y="306" font-size="12" fill="#173c40">效果：与 HiSparse OFF 走同款原生 PA_BSND 算子，仅对页表乘以 page_stride（如 ×5），无逐层索引重排与 Host 搬运</text>
+</svg></div><p class="caption">图 1：在 HMA 共享池中，block_stride 必须对齐到整个 MLA 页（<code>block_size × packed_row_bytes</code>）才能把虚实页映射简化为 <code>block_table * page_stride</code>。</p></figure>
+</section>
+
+<section class="chapter" id="c2"><span class="num">SECTION 02</span><h2>三条执行路径对比与双平台实测收益</h2>
+<p>当前 <code>_try_c8_resident_prefill</code> 形成了清晰的 3 级优先级：<strong>原生 <code>PA_BSND</code> 快路径</strong>（正常 100% 命中） → <strong>Resident <code>TND</code> 兜底</strong>（仅当外部绕过 <code>binding.py</code> 导致 <code>remainder != 0</code> 时保留 Resident 零搬运） → <strong><code>stage_prefill_rows</code> 兜底</strong>（上下文不在 NPU 时从 Host 拉取）。</p>
+
+<figure class="diagram"><figcaption><span>图 2：Prefill 三条执行路径分流与日志标识</span></figcaption><div class="diagram-scroll"><svg viewBox="0 0 980 280" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="b1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#236e77"/></marker></defs>
+<rect x="20" y="96" width="195" height="72" rx="6" fill="#fffef9" stroke="#236e77" stroke-width="1.8"/><text x="117" y="126" text-anchor="middle" font-size="13" font-weight="700" fill="#173c40">Prefill 请求进入</text><text x="117" y="148" text-anchor="middle" font-size="11" fill="#687976">切片 [:num_prefill_tokens]</text>
+<path d="M215 132 L270 132" stroke="#236e77" stroke-width="2" marker-end="url(#b1)"/>
+<rect x="275" y="92" width="210" height="80" rx="6" fill="#e9eeea" stroke="#236e77"/><text x="380" y="120" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">all_context_pages_resident?</text><text x="380" y="140" text-anchor="middle" font-size="11" fill="#304347">且检查 remainder == 0</text><text x="380" y="158" text-anchor="middle" font-size="11" fill="#687976">storage 连续 &amp; 非图捕获</text>
+<path d="M485 112 L560 56" stroke="#236e77" stroke-width="2.2" marker-end="url(#b1)"/>
+<path d="M485 132 L560 132" stroke="#a56b28" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#b1)"/>
+<path d="M485 152 L560 218" stroke="#9e332b" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#b1)"/>
+<rect x="565" y="18" width="390" height="74" rx="6" fill="#d5ecea" stroke="#236e77" stroke-width="2"/><text x="582" y="42" font-size="13" font-weight="700" fill="#173c40">① PA_BSND 原生快路径（正常 100% 命中）</text><text x="582" y="61" font-size="11" fill="#236e77">日志：Resident paged Prefill active (PA_BSND)</text><text x="582" y="78" font-size="11" fill="#304347">仅缩放 block_table，与 OFF 同款算子，零 H2D 搬运</text>
+<rect x="565" y="102" width="390" height="68" rx="6" fill="#f7ebd8" stroke="#a56b28"/><text x="582" y="126" font-size="13" font-weight="700" fill="#6c4213">② Resident TND 兜底（remainder != 0 时）</text><text x="582" y="145" font-size="11" fill="#824d12">日志：Resident paged Prefill fallback active (TND)</text><text x="582" y="161" font-size="11" fill="#304347">直接读 NPU Resident，避免 Host 搬运，但有逐层 argsort+gather</text>
+<rect x="565" y="182" width="390" height="76" rx="6" fill="#fdf6f5" stroke="#9e332b"/><text x="582" y="206" font-size="13" font-weight="700" fill="#7a221b">③ stage_prefill_rows（缺页或禁用 resident 时）</text><text x="582" y="225" font-size="11" fill="#7a221b">从 Host H2D 搬运到 staged 缓冲再算</text><text x="582" y="242" font-size="11" fill="#304347">BF16 下已改进为直接复用 paged SFA（含 PCP padding 切片）</text>
+</svg></div></figure>
+
+<div class="table-scroll"><table><thead><tr><th>平台 / 配置</th><th>用例</th><th>指标</th><th>HiSparse OFF</th><th>修复前（Host 搬运 / TND）</th><th>本 PR（PA_BSND）</th><th>收益对比</th></tr></thead><tbody>
+<tr><td><strong>Ascend A3</strong><br><code>GLM-5.2 78L int8</code><br><code>TP8 × PCP1</code></td><td><code>32K/128 C=1</code></td><td>TTFT<br>TPOT</td><td><code>12.122 s</code><br><code>17.078 ms</code></td><td>vs OFF <code>+99.85%</code><br>—</td><td><strong><code>12.414 s</code></strong><br><strong><code>17.080 ms</code></strong></td><td>TTFT 劣化 <code>+99.85% → +2.41%</code><br>TPOT 持平（<code>+0.01%</code>）</td></tr>
+<tr><td><strong>Ascend A3</strong><br><code>GLM-5.2 78L int8</code></td><td><code>64K/128 C=1</code></td><td>TTFT</td><td><code>25.221 s</code></td><td>vs OFF <code>+78.01%</code></td><td><strong><code>27.891 s</code></strong></td><td>TTFT 劣化 <code>+78.01% → +10.59%</code></td></tr>
+<tr><td><strong>Ascend A5</strong><br><code>GLM-5.3 fp8</code><br><code>TP4 × PCP2</code></td><td><code>32K/128 C=1</code></td><td>TTFT<br>E2E<br>输出吞吐</td><td><code>4.996 s</code><br><code>6.312 s</code><br><code>20.28 tok/s</code></td><td><code>11.890 s</code> (+138.0%)<br><code>13.188 s</code><br><code>9.71 tok/s</code></td><td><strong><code>6.193 s</code></strong> (+23.97%)<br><strong><code>7.548 s</code></strong><br><strong><code>16.96 tok/s</code></strong></td><td>TTFT 提速 <strong>47.9%</strong><br>E2E 提速 <strong>42.8%</strong><br>输出吞吐 <strong>+74.7%</strong></td></tr>
+<tr><td><strong>Ascend A5</strong><br><code>GLM-5.3 fp8</code><br><code>TP4 × PCP2</code></td><td><code>24K/4K C=8</code><br>(不缺显存)</td><td>总输出吞吐<br>TTFT avg<br>TPOT avg</td><td><code>455.06 tok/s</code><br><code>15.954 s</code><br><code>13.5 ms</code></td><td><code>364.39 tok/s</code> (-19.9%)<br><code>21.104 s</code><br><code>15.9 ms</code></td><td><strong><code>411.00 tok/s</code></strong> (-9.68%)<br><strong><code>18.842 s</code></strong><br><strong><code>14.7 ms</code></strong></td><td>吞吐提升 <strong>+12.8%</strong><br>TTFT 降低 <strong>10.7%</strong><br>TPOT 降低 <strong>7.5%</strong></td></tr>
+</tbody></table></div>
+</section>
+
+<section class="chapter" id="c3"><span class="num">SECTION 03</span><h2>核心改动一：<code>binding.py</code> 整页对齐（含中文注释）</h2>
+<p>vLLM Core 的 <code>get_hisparse_kv_cache_groups()</code> 在构建合成的 <code>HiSparseResidentSpec</code> / <code>HiSparseHotSpec</code> 时，会丢弃源 Spec 的 <code>block_stride_alignment</code>。因此在 <code>align_hisparse_indexer_specs</code> 中，必须同时给共池的 <code>AscendSFAIndexerCacheSpec</code> 和合成 Spec 声明 <code>spec.block_size * packed_row_bytes</code> 的整页对齐。</p>
+<details class="evidence" open><summary>vllm_ascend/hisparse/binding.py — align_hisparse_indexer_specs（已加详细中文注释）</summary><div class="source"><pre><code>def align_hisparse_indexer_specs(
+    specs: dict[str, KVCacheSpec],
+    *,
+    packed_row_bytes: int | None = None,
+) -> dict[str, KVCacheSpec]:
+    """向 vLLM Core 的 shared-slab 规划器声明整页对齐约束。"""
+    if packed_row_bytes is not None and packed_row_bytes <= 0:
+        raise ValueError("HiSparse packed row width must be positive")
+    aligned = {}
+    for name, spec in specs.items():
+        alignment = spec.get_block_stride_alignment()
+        updates = {}
+        if isinstance(spec, AscendSFAIndexerCacheSpec):
+            _validate_indexer_spec(spec)
+            if spec.cache_sparse_li_c8:
+                # C8 模式下 Indexer 的 K 与 scale 在页内各自连续存放，需预留两者空间
+                updates["page_size_padded"] = max(spec.page_size_bytes, spec.page_size_padded or 0)
+                alignment = math.lcm(alignment, spec.head_size, torch.float32.itemsize)
+            else:
+                alignment = math.lcm(alignment, spec.page_size_bytes)
+            if packed_row_bytes is not None:
+                # [PR #22716 关键修复 1]：
+                # Ascend PA_BSND 要求共享 slab 的 block_stride 对齐到整页（block_size * packed_row_bytes，
+                # 例如 128 * 656 = 83,968 B）。因为 Core 的 get_hisparse_kv_cache_groups() 重建
+                # HiSparseResidentSpec/HotSpec 时会丢掉 block_stride_alignment，所以必须通过
+                # 同池共用的 AscendSFAIndexerCacheSpec 把整页对齐透传给 Core。
+                alignment = math.lcm(alignment, spec.block_size * packed_row_bytes)
+        elif packed_row_bytes is not None and isinstance(spec, (HiSparseResidentSpec, HiSparseHotSpec)):
+            # [PR #22716 关键修复 2]：
+            # 对合成的 Resident/Hot Spec 同样把对齐粒度从 packed_row_bytes（单行）提升到整页，
+            # 让 Core 在计算物理块大小时直接分配整页倍数（remainder == 0）。
+            alignment = math.lcm(alignment, spec.block_size * packed_row_bytes)
+        if alignment != spec.get_block_stride_alignment():
+            updates["block_stride_alignment"] = alignment
+        aligned[name] = replace(spec, **updates) if updates else spec
+    return aligned</code></pre></div></details>
+</section>
+
+<section class="chapter" id="c4"><span class="num">SECTION 04</span><h2>核心改动二：<code>sfa_hisparse.py</code> 分流、PCP 切片与兜底（含中文注释）</h2>
+<p>在 <code>sfa_hisparse.py</code> 中，本 PR 完成了三项协同改动：① 放宽 PCP padding 长度门禁并做有效行切片；② 在 <code>PA_BSND</code> 条件不满足时保留 Resident <code>TND</code> 兜底且用 <code>info_once</code> 明确区分两条路径；③ BF16 <code>stage_prefill_rows</code> 路径同样复用 paged SFA。</p>
+<details class="evidence" open><summary>vllm_ascend/attention/sfa_hisparse.py — _try_c8_resident_prefill 与 BF16 分支（已加详细中文注释）</summary><div class="source"><pre><code>    def _try_c8_resident_prefill(self, query, query_rope, logical_topk, metadata, query_ends, key_lengths):
+        num_decodes = metadata.num_decodes
+        num_decode_tokens = metadata.num_decode_tokens
+        num_prefill_tokens = metadata.num_actual_tokens - num_decode_tokens
+        # [PR #22716 修复 3]：开启 PCP 时 query/query_rope/logical_topk 尾部存在 padding，
+        # 形状会大于等于有效 prefill token 数；原代码写 "==" 会直接误杀 PCP 场景。
+        if (
+            not self.enable_sparse_sfa_c8
+            or metadata.hisparse_for_capture
+            or query_rope is None
+            or num_prefill_tokens <= 0
+            or metadata.num_reqs != num_decodes + metadata.num_prefills
+            or query.shape[0] < num_prefill_tokens
+            or query_rope.shape[0] < num_prefill_tokens
+            or logical_topk.shape[0] < num_prefill_tokens
+        ):
+            return None
+        cache = self.hisparse_cache
+        view = cache.view
+        state_indices = cache.runtime.request_state_indices
+        if (
+            not cache.all_context_pages_resident
+            or cache.dummy_batch
+            or cache.draft_layer
+            or view is None
+            or cache.block_table is None
+            or state_indices is None
+            or state_indices.numel() < metadata.num_reqs
+            or query_ends.shape != (metadata.num_reqs,)
+            or key_lengths.shape != (metadata.num_reqs,)
+        ):
+            return None
+        if (
+            get_forward_context().cudagraph_runtime_mode != CUDAGraphMode.NONE
+            or torch.npu.is_current_stream_capturing()
+        ):
+            return None
+
+        # 裁掉 PCP 尾部 padding，只把真实有效 token 送入算子
+        query = query[:num_prefill_tokens]
+        query_rope = query_rope[:num_prefill_tokens]
+        logical_topk = logical_topk[:num_prefill_tokens]
+
+        # 计算每块对应多少个完整 MLA 页（page_stride）以及余数（remainder）
+        page_stride, remainder = divmod(view.attention_block_stride, view.block_size)
+        storage = view.attention_cache
+        # [注意]：这里必须用非原地操作，避免后面若走 TND 兜底时污染原始 block_table
+        table = cache.block_table.index_select(0, state_indices[num_decodes : metadata.num_reqs].to(torch.long))
+
+        # 路径 ①：PA_BSND 原生快路径（依赖 binding.py 整页对齐，正常情况下 remainder == 0 必命中）
+        if (
+            remainder == 0
+            and page_stride >= 1
+            and storage.is_contiguous()
+            and view.cache.stride(0) == view.attention_block_stride * view.cache.stride(1)
+            and storage.size(0) > (view.cache.size(0) - 1) * page_stride
+        ):
+            table = table.clamp_min(0).mul(page_stride)
+            if num_decodes:
+                query_ends = query_ends[num_decodes:] - num_decode_tokens
+                key_lengths = key_lengths[num_decodes:]
+            output = super()._execute_sparse_flash_attention_process(
+                query,
+                query_rope,
+                (storage.unsqueeze(2),),
+                logical_topk.unsqueeze(1),
+                metadata,
+                query_ends,
+                key_lengths,
+                block_table=table,
+            )
+            logger.info_once(
+                "[hisparse] Resident paged Prefill active (PA_BSND): mixed=%s",
+                bool(num_decodes),
+                scope="process",
+            )
+            return output
+
+        # 路径 ②：Resident TND 兜底路径（仅当外部绕过 binding.py 导致 remainder != 0 时触发）
+        # 直接在 NPU Resident 上做逐 token 物理偏移映射，至少避免退化回 Host H2D 搬运。
+        resident_cache = view.cache
+        req_id_per_token = metadata.req_id_per_token
+        if (
+            resident_cache.ndim != 3
+            or resident_cache.dtype not in (torch.int8, torch.float8_e4m3fn)
+            or resident_cache.shape[-1] != C8_ROW_BYTES
+            or view.block_size <= 0
+            or view.attention_block_stride < view.block_size
+            or resident_cache.stride(1) != C8_ROW_BYTES
+            or resident_cache.stride(2) != 1
+            or resident_cache.stride(0) != view.attention_block_stride * resident_cache.stride(1)
+            or req_id_per_token is None
+            or req_id_per_token.numel() < num_decode_tokens + num_prefill_tokens
+            or table.shape[1] <= 0
+            or logical_topk.ndim != 2
+            or logical_topk.shape[1] <= 0
+            or logical_topk.shape[1] % 128
+        ):
+            return None
+
+        req_ids = (
+            (req_id_per_token[num_decode_tokens : num_decode_tokens + num_prefill_tokens] - num_decodes)
+            .clamp(0, table.shape[0] - 1)
+            .to(torch.long)
+        )
+        safe_logical = logical_topk.clamp_min(0).to(torch.long)
+        block_ids = safe_logical // view.block_size
+        offsets = safe_logical % view.block_size
+        in_bounds = (logical_topk >= 0) & (block_ids < table.shape[1])
+        req_tables = table[req_ids]
+        phys_blocks = torch.gather(req_tables, 1, block_ids.clamp_max(table.shape[1] - 1)).to(torch.long)
+        valid = in_bounds & (phys_blocks >= 0)
+        mapped = torch.where(valid, phys_blocks.clamp_min(0) * view.attention_block_stride + offsets, -1).to(
+            torch.int32
+        )
+        output = self._c8_physical_attention(
+            query,
+            query_rope,
+            resident_cache,
+            compact_c8_indices(mapped),
+            indices_are_mapped=True,
+        )
+        logger.info_once(
+            "[hisparse] Resident paged Prefill fallback active (TND): mixed=%s",
+            bool(num_decodes),
+            scope="process",
+        )
+        return output</code></pre></div></details>
+
+<details class="evidence" open><summary>vllm_ascend/attention/sfa_hisparse.py — BF16 staged prefill 复用 paged SFA（已加中文注释）</summary><div class="source"><pre><code>                # [PR #22716 修复 4]：非 C8（BF16）模式经过 stage_prefill_rows 搬运后，
+                # 如果满足常规因果 prefill 条件，直接将 staged 页表传给父类 paged SFA，
+                # 省去原来的 sort + pack_attention_rows 重打包开销，同时按 num_prefill_tokens 切片兼容 PCP。
+                num_prefill_tokens = metadata.num_actual_tokens - num_decode
+                if (
+                    not self.enable_sparse_sfa_c8
+                    and self.qk_rope_head_dim
+                    and query_rope is not None
+                    and not metadata.hisparse_for_capture
+                    and num_prefill_tokens > 0
+                    and metadata.num_reqs == metadata.num_decodes + metadata.num_prefills
+                    and query.shape[0] >= num_prefill_tokens
+                    and query_rope.shape[0] >= num_prefill_tokens
+                    and selected.shape[0] >= num_prefill_tokens
+                    and actual_seq_lengths_query.shape == (metadata.num_reqs,)
+                    and actual_seq_lengths_key.shape == (metadata.num_reqs,)
+                ):
+                    latent, rope = staged.unsqueeze(2).split((self.kv_lora_rank, self.qk_rope_head_dim), dim=-1)
+                    prefill_output = super()._execute_sparse_flash_attention_process(
+                        query[:num_prefill_tokens],
+                        query_rope[:num_prefill_tokens],
+                        (latent.contiguous(), rope.contiguous()),
+                        selected[:num_prefill_tokens].unsqueeze(1),
+                        metadata,
+                        actual_seq_lengths_query[metadata.num_decodes :] - num_decode,
+                        actual_seq_lengths_key[metadata.num_decodes :],
+                        block_table=staged_table,
+                    )
+                else:
+                    # 否则沿用逐 token 物理偏移拼接路径
+                    ...</code></pre></div></details>
+</section>
+
+<section class="chapter" id="c5"><span class="num">SECTION 05</span><h2>延伸理解：为什么 A5 <code>PA_BSND</code> 仍比 OFF 慢 ~1.2s（HostMirror 掩盖边界）</h2>
+<p>打通 <code>PA_BSND</code> 后，A5 <code>32K/128 C=1</code> TTFT 从 <code>11.89s</code> 降到 <code>6.19s</code>，但对比 OFF（<code>5.00s</code>）仍有约 <code>+1.20s</code>（<code>+24%</code>）差距。结合 <code>host_mirror.py</code> 与 A5 Profiling 可知，这主要来自 <strong>Prefill 步末同步等 D2H 尾巴</strong>：</p>
+<ul>
+<li><strong>层间一直有并行掩盖</strong>：第 1~78 层每层算完调 <code>submit_layer_mirror</code>，后台 DMA 流与后续层计算并行。</li>
+<li><strong>但步末不允许跨 chunk 异步</strong>：因 Scheduler 在两步之间可能释放/驱逐/重分配物理块，所有在途 D2H 必须在 <code>finalize_step()</code> 前写完落盘。</li>
+<li><strong>只有纯 Decode 吃到了 <code>draft defer</code></strong>：<code>host_mirror.py:169</code> 显式限定 <code>not input_batch.has_prefill</code> 且无 padding 时才把同步推迟到 MTP/Draft 之后；A5 <code>TP4 × PCP2</code> 计算太快、单卡 D2H 流量大，78 层算完时 DMA 还剩约 <code>1.3s</code> 尾巴没搬完，只能在 <code>finish_forward()</code> 当场等完。</li>
+</ul>
+</section>
+
+<footer>PR <code>#22716</code> 固定走读 · <code>7842b4718</code> (base <code>44052241f</code>) · 仅依据当前已核验源码与实测结果整理。</footer>
+</main></div><script>
+const toggle=document.getElementById('toggle-evidence');
+if(toggle)toggle.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expanded')!=='true';document.querySelectorAll('details.evidence').forEach(x=>x.open=open);toggle.setAttribute('aria-expanded',String(open));toggle.textContent=open?'折叠全部源码':'展开全部源码';});
+document.getElementById('print-page')?.addEventListener('click',()=>window.print());
+const links=[...document.querySelectorAll('.toc a')];
+const observer=new IntersectionObserver(entries=>{for(const e of entries)if(e.isIntersecting)links.forEach(a=>a.classList.toggle('active',a.hash==='#'+e.target.id));},{rootMargin:'-5% 0px -80% 0px'});
+document.querySelectorAll('.chapter').forEach(s=>observer.observe(s));
+window.addEventListener('scroll',()=>{const total=document.documentElement.scrollHeight-innerHeight;document.getElementById('progress').style.width=(total>0?scrollY/total*100:0)+'%';},{passive:true});
+</script></body></html>
