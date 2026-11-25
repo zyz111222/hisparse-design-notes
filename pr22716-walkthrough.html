@@ -148,64 +148,66 @@ footer{padding-top:24px;font-size:12px;color:var(--muted)}
   <figure class="diagram">
     <figcaption><span>图 1：HiSparse OFF 独立池 vs ON 修复前（remainder != 0 掉回 D2D+TND）vs PR #22716 整页对齐（PA_BSND）</span></figcaption>
     <div class="diagram-scroll">
-      <svg viewBox="0 0 980 410" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 1040 448" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <marker id="ar-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#236e77"/></marker>
           <marker id="ar-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#9e332b"/></marker>
         </defs>
 
         <!-- Row 1: HiSparse OFF -->
-        <rect x="16" y="14" width="948" height="108" rx="7" fill="#f3f7f4" stroke="#bfd4cc"/>
-        <text x="32" y="37" font-size="13.5" font-weight="700" fill="#173c40">① HiSparse OFF（独立连续池 · attn_utils.py:1112-1114）</text>
-        <rect x="32" y="50" width="150" height="52" rx="5" fill="#e3f0ef" stroke="#236e77"/>
-        <text x="107" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">MLA Block 0</text>
-        <text x="107" y="90" text-anchor="middle" font-size="11" fill="#236e77">128 行 = 83,968 B</text>
-        <rect x="186" y="50" width="150" height="52" rx="5" fill="#e3f0ef" stroke="#236e77"/>
-        <text x="261" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">MLA Block 1</text>
-        <text x="261" y="90" text-anchor="middle" font-size="11" fill="#236e77">紧邻无间隙 (stride=128)</text>
-        <rect x="340" y="50" width="150" height="52" rx="5" fill="#e3f0ef" stroke="#236e77"/>
-        <text x="415" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">MLA Block 2</text>
-        <text x="415" y="90" text-anchor="middle" font-size="11" fill="#236e77">Indexer 另占独立池</text>
-        <path d="M502 76 L584 76" stroke="#236e77" stroke-width="2.2" marker-end="url(#ar-teal)"/>
-        <rect x="594" y="48" width="352" height="56" rx="5" fill="#d5ecea" stroke="#236e77"/>
-        <text x="770" y="71" text-anchor="middle" font-size="12.5" font-weight="700" fill="#173c40">page_stride = 1, remainder = 0 → 原生 PA_BSND</text>
-        <text x="770" y="91" text-anchor="middle" font-size="11" fill="#236e77">无 HMA 间隙，直接用原始 block_table 零拷贝寻址</text>
+        <rect x="16" y="14" width="1008" height="114" rx="7" fill="#f3f7f4" stroke="#bfd4cc"/>
+        <text x="32" y="38" font-size="13.5" font-weight="700" fill="#173c40">① HiSparse OFF（独立连续池 · attn_utils.py:1112-1114）</text>
+        <rect x="32" y="52" width="156" height="56" rx="5" fill="#e3f0ef" stroke="#236e77"/>
+        <text x="110" y="75" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">MLA Block 0</text>
+        <text x="110" y="94" text-anchor="middle" font-size="11" fill="#236e77">128 行 = 83,968 B</text>
+        <rect x="194" y="52" width="166" height="56" rx="5" fill="#e3f0ef" stroke="#236e77"/>
+        <text x="277" y="75" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">MLA Block 1</text>
+        <text x="277" y="94" text-anchor="middle" font-size="11" fill="#236e77">紧邻无间隙 (stride=128)</text>
+        <rect x="366" y="52" width="158" height="56" rx="5" fill="#e3f0ef" stroke="#236e77"/>
+        <text x="445" y="75" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">MLA Block 2</text>
+        <text x="445" y="94" text-anchor="middle" font-size="11" fill="#236e77">Indexer 另占独立池</text>
+        <path d="M534 80 L598 80" stroke="#236e77" stroke-width="2.2" marker-end="url(#ar-teal)"/>
+        <rect x="608" y="49" width="400" height="62" rx="5" fill="#d5ecea" stroke="#236e77"/>
+        <text x="808" y="74" text-anchor="middle" font-size="12.5" font-weight="700" fill="#173c40">page_stride = 1, remainder = 0 → 原生 PA_BSND</text>
+        <text x="808" y="95" text-anchor="middle" font-size="11" fill="#236e77">无 HMA 间隙，直接用原始 block_table 零拷贝寻址</text>
 
         <!-- Row 2: HiSparse ON Before Fix -->
-        <rect x="16" y="136" width="948" height="124" rx="7" fill="#fdf6f5" stroke="#d9b7b4"/>
-        <text x="32" y="160" font-size="13.5" font-weight="700" fill="#9e332b">② HiSparse ON 修复前（HMA 共享池仅按单行 656 B 对齐 + Core 丢弃合成 Spec 对齐 + PCP 严格相等误杀）</text>
-        <rect x="32" y="174" width="152" height="52" rx="5" fill="#fffef9" stroke="#cfd9d3"/>
-        <text x="108" y="196" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">Block 0 · L0 页</text>
-        <text x="108" y="214" text-anchor="middle" font-size="11" fill="#687976">128 行 (83,968 B)</text>
-        <rect x="188" y="174" width="142" height="52" rx="5" fill="#f8e3d6" stroke="#a56b28" stroke-dasharray="4 3"/>
-        <text x="259" y="196" text-anchor="middle" font-size="12" font-weight="700" fill="#824d12">HMA 非整页间隙</text>
-        <text x="259" y="214" text-anchor="middle" font-size="11" fill="#824d12">rem = stride % 128 != 0</text>
-        <rect x="334" y="174" width="156" height="52" rx="5" fill="#fffef9" stroke="#cfd9d3"/>
-        <text x="412" y="196" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">Block 1 · L0 页</text>
-        <text x="412" y="214" text-anchor="middle" font-size="11" fill="#9e332b">起始未对齐 83,968 B</text>
-        <path d="M502 200 L584 200" stroke="#9e332b" stroke-width="2.2" marker-end="url(#ar-red)"/>
-        <rect x="594" y="170" width="352" height="60" rx="5" fill="#f8dfdc" stroke="#9e332b"/>
-        <text x="770" y="193" text-anchor="middle" font-size="12.5" font-weight="700" fill="#7a221b">_try_c8_resident_prefill 返回 None</text>
-        <text x="770" y="213" text-anchor="middle" font-size="11" fill="#7a221b">掉入 stage_prefill_rows（临时 staged + 2×D2D copy + TND argsort）</text>
-        <text x="32" y="248" font-size="11.5" fill="#7a221b">后果：即使 miss_mask==0 跳过 Host H2D，每层临时显存 + D2D + TND 仍导致 A3 32K TTFT +99.85%，A5 32K TTFT +138.0%</text>
+        <rect x="16" y="142" width="1008" height="140" rx="7" fill="#fdf6f5" stroke="#d9b7b4"/>
+        <text x="32" y="166" font-size="13.5" font-weight="700" fill="#9e332b">② HiSparse ON 修复前（HMA 共享池仅按单行 656 B 对齐 + Core 丢弃合成 Spec 对齐 + PCP 严格相等误杀）</text>
+        <rect x="32" y="180" width="156" height="58" rx="5" fill="#fffef9" stroke="#cfd9d3"/>
+        <text x="110" y="204" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">Block 0 · L0 页</text>
+        <text x="110" y="223" text-anchor="middle" font-size="11" fill="#687976">128 行 (83,968 B)</text>
+        <rect x="194" y="180" width="166" height="58" rx="5" fill="#f8e3d6" stroke="#a56b28" stroke-dasharray="4 3"/>
+        <text x="277" y="204" text-anchor="middle" font-size="12" font-weight="700" fill="#824d12">HMA 非整页间隙</text>
+        <text x="277" y="223" text-anchor="middle" font-size="11" fill="#824d12">rem = stride % 128 != 0</text>
+        <rect x="366" y="180" width="158" height="58" rx="5" fill="#fffef9" stroke="#cfd9d3"/>
+        <text x="445" y="204" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">Block 1 · L0 页</text>
+        <text x="445" y="223" text-anchor="middle" font-size="11" fill="#9e332b">起始未对齐 83,968 B</text>
+        <path d="M534 209 L598 209" stroke="#9e332b" stroke-width="2.2" marker-end="url(#ar-red)"/>
+        <rect x="608" y="176" width="400" height="68" rx="5" fill="#f8dfdc" stroke="#9e332b"/>
+        <text x="808" y="198" text-anchor="middle" font-size="12.5" font-weight="700" fill="#7a221b">_try_c8_resident_prefill 返回 None</text>
+        <text x="808" y="217" text-anchor="middle" font-size="11" fill="#7a221b">掉入 stage_prefill_rows（分配临时 staged 显存）</text>
+        <text x="808" y="234" text-anchor="middle" font-size="11" fill="#7a221b">+ 2× NPU D2D copy + TND 路径 argsort 重排</text>
+        <text x="32" y="266" font-size="11.5" fill="#7a221b">后果：即使 miss_mask==0 跳过 Host H2D，每层临时显存 + D2D + TND 仍导致 A3 32K TTFT +99.85%，A5 32K TTFT +138.0%</text>
 
         <!-- Row 3: HiSparse ON After PR #22716 -->
-        <rect x="16" y="274" width="948" height="122" rx="7" fill="#f2f7f6" stroke="#b6d1ce"/>
-        <text x="32" y="298" font-size="13.5" font-weight="700" fill="#173c40">③ HiSparse ON · PR #22716 修复后（binding.py 透传整页对齐 83,968 B + PCP 切片 [:num_prefill_tokens]）</text>
-        <rect x="32" y="312" width="152" height="52" rx="5" fill="#e3f0ef" stroke="#236e77"/>
-        <text x="108" y="334" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">Block 0 (Page 0)</text>
-        <text x="108" y="352" text-anchor="middle" font-size="11" fill="#236e77">128 行 (83,968 B)</text>
-        <rect x="188" y="312" width="142" height="52" rx="5" fill="#e9eeea" stroke="#236e77" stroke-dasharray="4 3"/>
-        <text x="259" y="334" text-anchor="middle" font-size="12" font-weight="700" fill="#236e77">整页对齐间隙</text>
-        <text x="259" y="352" text-anchor="middle" font-size="11" fill="#236e77">4 个完整页 (512 行)</text>
-        <rect x="334" y="312" width="156" height="52" rx="5" fill="#e3f0ef" stroke="#236e77"/>
-        <text x="412" y="334" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">Block 1 (Page 5)</text>
-        <text x="412" y="352" text-anchor="middle" font-size="11" fill="#236e77">stride = 640 行 = 5×128</text>
-        <path d="M502 338 L584 338" stroke="#236e77" stroke-width="2.2" marker-end="url(#ar-teal)"/>
-        <rect x="594" y="308" width="352" height="60" rx="5" fill="#d5ecea" stroke="#236e77" stroke-width="1.8"/>
-        <text x="770" y="331" text-anchor="middle" font-size="12.5" font-weight="700" fill="#173c40">table.clamp_min(0).mul(5) → 原生 PA_BSND</text>
-        <text x="770" y="351" text-anchor="middle" font-size="11" fill="#236e77">与 OFF 同款算子，零 staged 分配、零 D2D/H2D 搬运、零 argsort</text>
-        <text x="32" y="385" font-size="11.5" fill="#173c40">效果：A3 32K TTFT 劣化从 +99.85% 降至 +2.41%；A5 24K/4K C=8 吞吐提升至 411.00 tok/s；32K/8K C=16 追平并略超 OFF（+0.26%）</text>
+        <rect x="16" y="296" width="1008" height="138" rx="7" fill="#f2f7f6" stroke="#b6d1ce"/>
+        <text x="32" y="320" font-size="13.5" font-weight="700" fill="#173c40">③ HiSparse ON · PR #22716 修复后（binding.py 透传整页对齐 83,968 B + PCP 切片 [:num_prefill_tokens]）</text>
+        <rect x="32" y="334" width="156" height="58" rx="5" fill="#e3f0ef" stroke="#236e77"/>
+        <text x="110" y="358" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">Block 0 (Page 0)</text>
+        <text x="110" y="377" text-anchor="middle" font-size="11" fill="#236e77">128 行 (83,968 B)</text>
+        <rect x="194" y="334" width="166" height="58" rx="5" fill="#e9eeea" stroke="#236e77" stroke-dasharray="4 3"/>
+        <text x="277" y="358" text-anchor="middle" font-size="12" font-weight="700" fill="#236e77">整页对齐间隙</text>
+        <text x="277" y="377" text-anchor="middle" font-size="11" fill="#236e77">4 个完整页 (512 行)</text>
+        <rect x="366" y="334" width="158" height="58" rx="5" fill="#e3f0ef" stroke="#236e77"/>
+        <text x="445" y="358" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">Block 1 (Page 5)</text>
+        <text x="445" y="377" text-anchor="middle" font-size="11" fill="#236e77">stride=640 行 (5×128)</text>
+        <path d="M534 363 L598 363" stroke="#236e77" stroke-width="2.2" marker-end="url(#ar-teal)"/>
+        <rect x="608" y="330" width="400" height="68" rx="5" fill="#d5ecea" stroke="#236e77" stroke-width="1.8"/>
+        <text x="808" y="352" text-anchor="middle" font-size="12.5" font-weight="700" fill="#173c40">table.clamp_min(0).mul(5) → 原生 PA_BSND</text>
+        <text x="808" y="371" text-anchor="middle" font-size="11" fill="#236e77">与 OFF 同款算子，零 staged 分配、零 D2D/H2D</text>
+        <text x="808" y="388" text-anchor="middle" font-size="11" fill="#236e77">零 argsort 重排，纯硬件页表跳页直读</text>
+        <text x="32" y="420" font-size="11.5" fill="#173c40">效果：A3 32K TTFT 劣化从 +99.85% 降至 +2.41%；A5 24K/4K C=8 吞吐提升至 411.00 tok/s；32K/8K C=16 追平并略超 OFF（+0.26%）</text>
       </svg>
     </div>
     <p class="caption">图 1：为什么 OFF 天然走通、ON 修复前掉回慢路径，以及 PR #22716 如何通过整页对齐把虚实页映射简化为 <code>block_table * page_stride</code>。</p>
@@ -248,103 +250,111 @@ footer{padding-top:24px;font-size:12px;color:var(--muted)}
   <figure class="diagram">
     <figcaption><span>图 2：HMA 共享池 48,000 个固定 5 页（419,840 B）物理块排布与 PA_BSND 的 block_table × 5 跳页机制</span></figcaption>
     <div class="diagram-scroll">
-      <svg viewBox="0 0 980 495" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 1040 564" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <marker id="m-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#236e77"/></marker>
           <marker id="m-warm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#a56b28"/></marker>
         </defs>
 
         <!-- 外框：48,000 块大池 -->
-        <rect x="14" y="14" width="952" height="308" rx="8" fill="#fffef9" stroke="#173c40" stroke-width="1.5"/>
-        <text x="30" y="38" font-size="14" font-weight="700" fill="#173c40">HMA 统一共享物理块大池（总计 ~48,000 个等长物理块 · 每块固定 5 个 MLA 页 = 640 行 = 419,840 B）</text>
+        <rect x="16" y="14" width="1008" height="320" rx="8" fill="#fffef9" stroke="#173c40" stroke-width="1.5"/>
+        <text x="34" y="40" font-size="14" font-weight="700" fill="#173c40">HMA 统一共享物理块大池（总计 ~48,000 个等长物理块 · 每块固定 5 个 MLA 页 = 640 行 = 419,840 B）</text>
 
         <!-- 列头：页槽标尺 -->
-        <text x="195" y="62" font-size="11.5" font-weight="700" fill="#687976">槽位 Page +0 (82K)</text>
-        <text x="345" y="62" font-size="11.5" font-weight="700" fill="#687976">槽位 Page +1 (82K)</text>
-        <text x="495" y="62" font-size="11.5" font-weight="700" fill="#687976">槽位 Page +2 (82K)</text>
-        <text x="645" y="62" font-size="11.5" font-weight="700" fill="#687976">槽位 Page +3 (82K)</text>
-        <text x="795" y="62" font-size="11.5" font-weight="700" fill="#687976">槽位 Page +4 (82K)</text>
+        <text x="269" y="65" text-anchor="middle" font-size="11.5" font-weight="700" fill="#687976">槽位 Page +0 (82K)</text>
+        <text x="433" y="65" text-anchor="middle" font-size="11.5" font-weight="700" fill="#687976">槽位 Page +1 (82K)</text>
+        <text x="597" y="65" text-anchor="middle" font-size="11.5" font-weight="700" fill="#687976">槽位 Page +2 (82K)</text>
+        <text x="761" y="65" text-anchor="middle" font-size="11.5" font-weight="700" fill="#687976">槽位 Page +3 (82K)</text>
+        <text x="927" y="65" text-anchor="middle" font-size="11.5" font-weight="700" fill="#687976">槽位 Page +4 (82K)</text>
 
         <!-- Block 0: Indexer -->
-        <text x="30" y="96" font-size="12.5" font-weight="700" fill="#173c40">Block 0</text>
-        <text x="30" y="112" font-size="11" fill="#687976">Indexer 组 (22层)</text>
-        <rect x="180" y="72" width="665" height="44" rx="4" fill="#e6eaf8" stroke="#5c7caa" stroke-width="1.5"/>
-        <text x="512" y="99" text-anchor="middle" font-size="12.5" font-weight="700" fill="#223859">22 层 Indexer Cache（22 × 16,896 B = 371,712 B ≈ 4.43 页）</text>
-        <rect x="849" y="72" width="98" height="44" rx="4" fill="#f3f4f2" stroke="#9aa8a4" stroke-dasharray="4 3"/>
-        <text x="898" y="92" text-anchor="middle" font-size="11" font-weight="700" fill="#687976">留空对齐</text>
-        <text x="898" y="108" text-anchor="middle" font-size="10.5" fill="#687976">48,128 B</text>
+        <text x="34" y="100" font-size="12.5" font-weight="700" fill="#173c40">Block 0</text>
+        <text x="34" y="116" font-size="11" fill="#687976">Indexer 组 (22层)</text>
+        <rect x="190" y="76" width="710" height="46" rx="4" fill="#e6eaf8" stroke="#5c7caa" stroke-width="1.5"/>
+        <text x="545" y="104" text-anchor="middle" font-size="12.5" font-weight="700" fill="#223859">22 层 Indexer Cache（22 × 16,896 B = 371,712 B ≈ 4.43 页）</text>
+        <rect x="904" y="76" width="104" height="46" rx="4" fill="#f3f4f2" stroke="#9aa8a4" stroke-dasharray="4 3"/>
+        <text x="956" y="96" text-anchor="middle" font-size="11" font-weight="700" fill="#687976">留空对齐</text>
+        <text x="956" y="112" text-anchor="middle" font-size="10.5" fill="#687976">48,128 B</text>
 
         <!-- Block 1: resident_group[0] (L0~L3) -->
-        <text x="30" y="149" font-size="12.5" font-weight="700" fill="#236e77">Block 1</text>
-        <text x="30" y="165" font-size="11" fill="#236e77">resident_group[0]</text>
-        <rect x="180" y="126" width="146" height="44" rx="4" fill="#d5ecea" stroke="#236e77" stroke-width="1.8"/>
-        <text x="253" y="146" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">L0 (Page 5)</text>
-        <text x="253" y="162" text-anchor="middle" font-size="10.5" fill="#236e77">83,968 B</text>
-        <rect x="330" y="126" width="146" height="44" rx="4" fill="#e3f0ef" stroke="#236e77"/>
-        <text x="403" y="146" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">L1 (Page 6)</text>
-        <text x="403" y="162" text-anchor="middle" font-size="10.5" fill="#236e77">83,968 B</text>
-        <rect x="480" y="126" width="146" height="44" rx="4" fill="#e3f0ef" stroke="#236e77"/>
-        <text x="553" y="146" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">L2 (Page 7)</text>
-        <text x="553" y="162" text-anchor="middle" font-size="10.5" fill="#236e77">83,968 B</text>
-        <rect x="630" y="126" width="146" height="44" rx="4" fill="#e3f0ef" stroke="#236e77"/>
-        <text x="703" y="146" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">L3 (Page 8)</text>
-        <text x="703" y="162" text-anchor="middle" font-size="10.5" fill="#236e77">83,968 B</text>
-        <rect x="780" y="126" width="167" height="44" rx="4" fill="#f3f4f2" stroke="#9aa8a4" stroke-dasharray="4 3"/>
-        <text x="863" y="146" text-anchor="middle" font-size="11.5" font-weight="700" fill="#687976">留空 1 整页 (Page 9)</text>
-        <text x="863" y="162" text-anchor="middle" font-size="10.5" fill="#687976">83,968 B (PA_BSND 跳过)</text>
+        <text x="34" y="156" font-size="12.5" font-weight="700" fill="#236e77">Block 1</text>
+        <text x="34" y="172" font-size="11" fill="#236e77">resident_group[0]</text>
+        <rect x="190" y="132" width="158" height="46" rx="4" fill="#d5ecea" stroke="#236e77" stroke-width="1.8"/>
+        <text x="269" y="153" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">L0 (Page 5)</text>
+        <text x="269" y="169" text-anchor="middle" font-size="10.5" fill="#236e77">83,968 B</text>
+        <rect x="354" y="132" width="158" height="46" rx="4" fill="#e3f0ef" stroke="#236e77"/>
+        <text x="433" y="153" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">L1 (Page 6)</text>
+        <text x="433" y="169" text-anchor="middle" font-size="10.5" fill="#236e77">83,968 B</text>
+        <rect x="518" y="132" width="158" height="46" rx="4" fill="#e3f0ef" stroke="#236e77"/>
+        <text x="597" y="153" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">L2 (Page 7)</text>
+        <text x="597" y="169" text-anchor="middle" font-size="10.5" fill="#236e77">83,968 B</text>
+        <rect x="682" y="132" width="158" height="46" rx="4" fill="#e3f0ef" stroke="#236e77"/>
+        <text x="761" y="153" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">L3 (Page 8)</text>
+        <text x="761" y="169" text-anchor="middle" font-size="10.5" fill="#236e77">83,968 B</text>
+        <rect x="846" y="132" width="162" height="46" rx="4" fill="#f3f4f2" stroke="#9aa8a4" stroke-dasharray="4 3"/>
+        <text x="927" y="153" text-anchor="middle" font-size="11" font-weight="700" fill="#687976">留空 1 整页 (Page 9)</text>
+        <text x="927" y="169" text-anchor="middle" font-size="10.5" fill="#687976">83,968 B (跳过)</text>
 
         <!-- Block 2: resident_group[1] (L4~L7) -->
-        <text x="30" y="202" font-size="12.5" font-weight="700" fill="#236e77">Block 2</text>
-        <text x="30" y="218" font-size="11" fill="#236e77">resident_group[1]</text>
-        <rect x="180" y="180" width="146" height="42" rx="4" fill="#e3f0ef" stroke="#236e77"/>
-        <text x="253" y="205" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">L4 (Page 10)</text>
-        <rect x="330" y="180" width="146" height="42" rx="4" fill="#e3f0ef" stroke="#236e77"/>
-        <text x="403" y="205" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">L5 (Page 11)</text>
-        <rect x="480" y="180" width="146" height="42" rx="4" fill="#e3f0ef" stroke="#236e77"/>
-        <text x="553" y="205" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">L6 (Page 12)</text>
-        <rect x="630" y="180" width="146" height="42" rx="4" fill="#e3f0ef" stroke="#236e77"/>
-        <text x="703" y="205" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">L7 (Page 13)</text>
-        <rect x="780" y="180" width="167" height="42" rx="4" fill="#f3f4f2" stroke="#9aa8a4" stroke-dasharray="4 3"/>
-        <text x="863" y="205" text-anchor="middle" font-size="11" fill="#687976">留空 1 整页 (Page 14)</text>
+        <text x="34" y="210" font-size="12.5" font-weight="700" fill="#236e77">Block 2</text>
+        <text x="34" y="226" font-size="11" fill="#236e77">resident_group[1]</text>
+        <rect x="190" y="188" width="158" height="42" rx="4" fill="#e3f0ef" stroke="#236e77"/>
+        <text x="269" y="213" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">L4 (Page 10)</text>
+        <rect x="354" y="188" width="158" height="42" rx="4" fill="#e3f0ef" stroke="#236e77"/>
+        <text x="433" y="213" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">L5 (Page 11)</text>
+        <rect x="518" y="188" width="158" height="42" rx="4" fill="#e3f0ef" stroke="#236e77"/>
+        <text x="597" y="213" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">L6 (Page 12)</text>
+        <rect x="682" y="188" width="158" height="42" rx="4" fill="#e3f0ef" stroke="#236e77"/>
+        <text x="761" y="213" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">L7 (Page 13)</text>
+        <rect x="846" y="188" width="162" height="42" rx="4" fill="#f3f4f2" stroke="#9aa8a4" stroke-dasharray="4 3"/>
+        <text x="927" y="213" text-anchor="middle" font-size="11" fill="#687976">留空 1 整页 (Page 14)</text>
 
         <!-- Block 3: Hot -->
-        <text x="30" y="253" font-size="12.5" font-weight="700" fill="#a56b28">Block 3</text>
-        <text x="30" y="269" font-size="11" fill="#a56b28">Hot 组 (固定配额)</text>
-        <rect x="180" y="232" width="596" height="38" rx="4" fill="#f7ebd8" stroke="#a56b28"/>
-        <text x="478" y="255" text-anchor="middle" font-size="12" font-weight="700" fill="#6c4213">Hot 稀疏槽位（4 层一组 · Decode 冷行 H2D 换入目标，每请求固定配额）</text>
-        <rect x="780" y="232" width="167" height="38" rx="4" fill="#f3f4f2" stroke="#9aa8a4" stroke-dasharray="4 3"/>
-        <text x="863" y="255" text-anchor="middle" font-size="11" fill="#687976">留空 1 整页</text>
+        <text x="34" y="261" font-size="12.5" font-weight="700" fill="#a56b28">Block 3</text>
+        <text x="34" y="277" font-size="11" fill="#a56b28">Hot 组 (固定配额)</text>
+        <rect x="190" y="240" width="650" height="38" rx="4" fill="#f7ebd8" stroke="#a56b28"/>
+        <text x="515" y="264" text-anchor="middle" font-size="12" font-weight="700" fill="#6c4213">Hot 稀疏槽位（4 层一组 · Decode 冷行 H2D 换入目标，每请求固定配额）</text>
+        <rect x="846" y="240" width="162" height="38" rx="4" fill="#f3f4f2" stroke="#9aa8a4" stroke-dasharray="4 3"/>
+        <text x="927" y="264" text-anchor="middle" font-size="11" fill="#687976">留空 1 整页</text>
 
         <!-- Block 4: MTP L78 -->
-        <text x="30" y="300" font-size="12.5" font-weight="700" fill="#687976">Block 4</text>
-        <text x="30" y="314" font-size="11" fill="#687976">MTP 尾层 L78</text>
-        <rect x="180" y="279" width="146" height="34" rx="4" fill="#e9eeea" stroke="#687976"/>
-        <text x="253" y="300" text-anchor="middle" font-size="11.5" font-weight="700" fill="#173c40">MTP L78 (1页)</text>
-        <rect x="330" y="279" width="617" height="34" rx="4" fill="#f3f4f2" stroke="#9aa8a4" stroke-dasharray="4 3"/>
-        <text x="638" y="300" text-anchor="middle" font-size="11" fill="#687976">留空 4 整页（仅 1 个尾层，全局占比极低） · …… 一直延续到 Block 47,999</text>
+        <text x="34" y="308" font-size="12.5" font-weight="700" fill="#687976">Block 4</text>
+        <text x="34" y="323" font-size="11" fill="#687976">MTP 尾层 L78</text>
+        <rect x="190" y="288" width="158" height="36" rx="4" fill="#e9eeea" stroke="#687976"/>
+        <text x="269" y="310" text-anchor="middle" font-size="11.5" font-weight="700" fill="#173c40">MTP L78 (1页)</text>
+        <rect x="354" y="288" width="654" height="36" rx="4" fill="#f3f4f2" stroke="#9aa8a4" stroke-dasharray="4 3"/>
+        <text x="681" y="310" text-anchor="middle" font-size="11" fill="#687976">留空 4 整页（仅 1 个尾层，全局占比极低） · …… 一直延续到 Block 47,999</text>
 
-        <!-- 下半部分：PA_BSND 视角跳页机制 -->
-        <rect x="14" y="344" width="952" height="138" rx="8" fill="#f2f7f6" stroke="#236e77" stroke-width="1.5"/>
-        <text x="30" y="368" font-size="13.5" font-weight="700" fill="#173c40">L0 层的 PA_BSND 视角：view.attention_cache 线性页视图 + block_table × 5 精准跳页</text>
-        <text x="30" y="388" font-size="12" fill="#304347">假设某请求的 L0 层逻辑页 0 位于 <strong>Block 1</strong>，逻辑页 1 位于 <strong>Block 7</strong>（则原始 <code>cache.block_table = [1, 7]</code>）：</text>
+        <!-- 下半部分：PA_BSND 视角跳页机制（纯 SVG tspan + 三列流程卡片） -->
+        <rect x="16" y="352" width="1008" height="196" rx="8" fill="#f2f7f6" stroke="#236e77" stroke-width="1.5"/>
+        <text x="34" y="382" font-size="14" font-weight="700" fill="#173c40">L0 层的 PA_BSND 视角：view.attention_cache 线性页视图 + block_table × 5 精准跳页</text>
+        <text x="34" y="407" font-size="12" fill="#304347">示例：某请求的 L0 层逻辑页 0 位于 <tspan font-weight="700" fill="#173c40">Block 1</tspan>，逻辑页 1 位于 <tspan font-weight="700" fill="#173c40">Block 7</tspan>（原始 <tspan font-family="Consolas,monospace" fill="#236e77">cache.block_table = [1, 7]</tspan>）：</text>
 
-        <rect x="30" y="404" width="215" height="58" rx="5" fill="#fffef9" stroke="#236e77"/>
-        <text x="137" y="426" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">原始 block_table</text>
-        <text x="137" y="447" text-anchor="middle" font-size="12" font-family="Consolas,monospace" fill="#236e77">[1, 7]</text>
+        <!-- 左列卡片 -->
+        <rect x="34" y="426" width="244" height="102" rx="6" fill="#fffef9" stroke="#236e77" stroke-width="1.4"/>
+        <text x="156" y="452" text-anchor="middle" font-size="12.5" font-weight="700" fill="#173c40">① 原始逻辑页表</text>
+        <text x="156" y="479" text-anchor="middle" font-size="13" font-weight="700" font-family="Consolas,monospace" fill="#236e77">block_table = [1, 7]</text>
+        <text x="156" y="507" text-anchor="middle" font-size="11" fill="#687976">逻辑页 0→Block 1，页 1→Block 7</text>
 
-        <path d="M245 433 L325 433" stroke="#236e77" stroke-width="2.2" marker-end="url(#m-teal)"/>
-        <text x="285" y="424" text-anchor="middle" font-size="11" font-weight="700" fill="#236e77">× 5</text>
+        <!-- 箭头 1 -->
+        <path d="M284 477 L352 477" stroke="#236e77" stroke-width="2.2" marker-end="url(#m-teal)"/>
+        <text x="318" y="465" text-anchor="middle" font-size="11.5" font-weight="700" fill="#236e77">× 5 缩放</text>
 
-        <rect x="330" y="404" width="250" height="58" rx="5" fill="#d5ecea" stroke="#236e77" stroke-width="1.8"/>
-        <text x="455" y="426" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">缩放后传给 PA_BSND</text>
-        <text x="455" y="447" text-anchor="middle" font-size="12" font-family="Consolas,monospace" fill="#173c40">table.mul(5) = [5, 35]</text>
+        <!-- 中列卡片 -->
+        <rect x="358" y="426" width="268" height="102" rx="6" fill="#d5ecea" stroke="#236e77" stroke-width="1.8"/>
+        <text x="492" y="452" text-anchor="middle" font-size="12.5" font-weight="700" fill="#173c40">② 整页步长缩放（stride = 5）</text>
+        <text x="492" y="479" text-anchor="middle" font-size="13" font-weight="700" font-family="Consolas,monospace" fill="#173c40">table.mul(5) → [5, 35]</text>
+        <text x="492" y="507" text-anchor="middle" font-size="11" fill="#236e77">每块跨 5 个完整 MLA 页，rem == 0</text>
 
-        <path d="M580 433 L645 433" stroke="#236e77" stroke-width="2.2" marker-end="url(#m-teal)"/>
+        <!-- 箭头 2 -->
+        <path d="M632 477 L684 477" stroke="#236e77" stroke-width="2.2" marker-end="url(#m-teal)"/>
+        <text x="658" y="465" text-anchor="middle" font-size="11" font-weight="700" fill="#236e77">寻址</text>
 
-        <rect x="650" y="400" width="298" height="66" rx="5" fill="#fffef9" stroke="#236e77"/>
-        <text x="799" y="422" text-anchor="middle" font-size="12" font-weight="700" fill="#173c40">硬件直接寻址 view.attention_cache</text>
-        <text x="799" y="441" text-anchor="middle" font-size="11" fill="#236e77">Page 5 → Block 1 的 L0 起始地址</text>
-        <text x="799" y="457" text-anchor="middle" font-size="11" fill="#236e77">Page 35 → Block 7 的 L0 起始地址（精准跳过中间页）</text>
+        <!-- 右列卡片 -->
+        <rect x="690" y="426" width="316" height="102" rx="6" fill="#fffef9" stroke="#236e77" stroke-width="1.4"/>
+        <text x="848" y="452" text-anchor="middle" font-size="12.5" font-weight="700" fill="#173c40">③ PA_BSND 硬件直接寻址</text>
+        <text x="848" y="479" text-anchor="middle" font-size="11.5" fill="#236e77">Page 5 → Block 1 的 L0 起始地址</text>
+        <text x="848" y="505" text-anchor="middle" font-size="11.5" fill="#236e77">Page 35 → Block 7 的 L0 起始地址</text>
       </svg>
     </div>
     <p class="caption">图 2：每层的 <code>view.attention_cache</code> 均以该层在 Block 0 中的起始偏移为基址，将整池重解释为等步长的 128 行页视图；<code>block_table × 5</code> 使硬件页表精准跨越同块内的其他 3 层与 1 个留空页。</p>
