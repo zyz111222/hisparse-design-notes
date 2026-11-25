@@ -17,7 +17,7 @@
 
 2026-11-17：`pr21892-walkthrough.html` 改为整份 #21892 的图解设计，14张图、12章，覆盖初始化、查询/写入布局、同步/异步加载、Prolog/Native、Prefill/Decode/混合步、Graph、MTP、Host保存/重叠、回收与PD边界；原固定源码/diff保留在折叠附录。固定 Ascend `0cfbf72e2331fc3035119af7a3231d5db6331b92` / Core `ba15685ab7f4f5fbed8630bbb7441f8837e76fbe`。
 
-## PR #22716 整页对齐与 Prefill 路径修复
+## PR #22716 HMA 整页对齐与 PCP Prefill 修复
 
-[当前网页](https://zyz111222.github.io/hisparse-design-notes/pr22716-walkthrough.html) · [PR #22716](https://github.com/vllm-project/vllm-ascend/pull/22716)：针对 HMA 共享池 `block_stride` 未整页对齐、`PCP > 1` padding 门禁误杀及 BF16 路径未复用 paged SFA 的问题，在 `binding.py` 对齐整页并在 `sfa_hisparse.py` 分流原生 `PA_BSND` 快路径与 Resident `TND` 兜底，附 A3/A5 实测收益。
+[当前网页](https://zyz111222.github.io/hisparse-design-notes/pr22716-walkthrough.html) · [PR #22716](https://github.com/vllm-project/vllm-ascend/pull/22716)（`6bbc97a1`，标题：`[Bugfix][HiSparse] Align HMA block stride to full MLA pages and support PCP prefill padding`）：针对 HMA 共享池 `block_stride` 未整页对齐、`PCP > 1` padding 门禁误杀及 BF16 路径未复用 paged SFA 的问题，详解 HMA 44 组装箱与 640 行（5 页）推导、`binding.py` 整页对齐与 `sfa_hisparse.py` 原生 `PA_BSND` 零拷贝快路径（已移除冗余 Resident `TND` 兜底），附全量逐行中文源码精讲与 A3/A5 四方实测对比。
 
